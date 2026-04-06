@@ -6,6 +6,9 @@ var logger = require("./config/logger");
 require("./config/db");
 
 var port = process.env.PORT || 3000;
+if(port == 8080){
+    port=3000;
+}
 
 var server = app.listen(port, '0.0.0.0', function () {
     logger.info("Server started on port " + port, { meta: { port: port, env: process.env.NODE_ENV || "development" } });
