@@ -316,7 +316,7 @@
                                     "div",
                                     { className: "container" },
                                     e("img", {
-                                        src: "uploads/" + (obj.idproofpic || "nopic.png"),
+                                        src: /^https?:\/\//.test(obj.idproofpic || "") ? obj.idproofpic : ("uploads/" + (obj.idproofpic || "nopic.png")),
                                         className: "card-img-top mt-3",
                                         alt: ""
                                     })

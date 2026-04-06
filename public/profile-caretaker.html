@@ -85,7 +85,7 @@
                     $("#caretkrPin").val(row.pin);
                     $("#selPets").val(row.selpets);
                     $("#hdn").val(row.idproofpic);
-                    $("#idpicPrev").prop("src", "uploads/" + row.idproofpic);
+                    $("#idpicPrev").prop("src", /^https?:\/\//.test(row.idproofpic) ? row.idproofpic : ("uploads/" + row.idproofpic));
                 }).fail(function (xhr) {
                     var msg = extractApiError(xhr, "Could not load profile.");
                     console.warn("[profile-caretaker] load failed", xhr.status, msg);

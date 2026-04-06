@@ -107,8 +107,8 @@
                     var idProofPic = row.idproofpic || "nopic.png";
                     $("#hdn-1").val(profilePic);
                     $("#hdn-2").val(idProofPic);
-                    $("#ppicPrev").prop("src", "uploads/" + profilePic);
-                    $("#idpicPrev").prop("src", "uploads/" + idProofPic);
+                    $("#ppicPrev").prop("src", /^https?:\/\//.test(profilePic) ? profilePic : ("uploads/" + profilePic));
+                    $("#idpicPrev").prop("src", /^https?:\/\//.test(idProofPic) ? idProofPic : ("uploads/" + idProofPic));
                 }).fail(function (xhr) {
                     var msg = extractApiError(xhr, "Could not load profile.");
                     console.warn("[profile-client] load failed", xhr.status, msg);

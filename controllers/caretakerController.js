@@ -1,6 +1,8 @@
 var dbRef                   = require("../config/db");
 var AppError                = require("../utils/AppError");
 var resolveCaretakerColumns = require("../utils/caretakerDbColumns").resolveCaretakerColumns;
+var cloudinaryUpload        = require("../utils/cloudinary").uploadFile;
+var cloudinaryEnabled       = require("../utils/cloudinary").isEnabled;
 
 exports.createProfile = function (req, res, next) {
     var pic = "nopic.png";
@@ -26,8 +28,22 @@ exports.createProfile = function (req, res, next) {
     }
 
     if (req.files && req.files.idpic) {
-        pic = req.files.idpic.name;
-        req.files.idpic.mv(process.cwd() + "/public/uploads/" + pic, function (err) {
+        var f = req.files.idpic;
+        if (cloudinaryEnabled()) {
+            cloudinaryUpload(f, { subfolder: "caretaker/idproof" }, function (err, out) {
+                if (aborted) return;
+                if (err) {
+                    aborted = true;
+                    return next(err);
+                }
+                pic = out && out.url ? out.url : "nopic.png";
+                doInsert();
+            });
+            return;
+        }
+
+        pic = f.name;
+        f.mv(process.cwd() + "/public/uploads/" + pic, function (err) {
             if (aborted) return;
             if (err) {
                 aborted = true;
@@ -80,8 +96,17 @@ exports.updateProfile = function (req, res, next) {
 
     // Caretaker profile form uploads only `idpic` (not `ppic`)
     if (req.files && req.files.idpic) {
-        picName = req.files.idpic.name;
-        req.files.idpic.mv(process.cwd() + "/public/uploads/" + picName, function (err) {
+        var f = req.files.idpic;
+        if (cloudinaryEnabled()) {
+            cloudinaryUpload(f, { subfolder: "caretaker/idproof" }, function (err, out) {
+                if (err) return next(err);
+                picName = out && out.url ? out.url : "nopic.png";
+                doUpdate();
+            });
+            return;
+        }
+        picName = f.name;
+        f.mv(process.cwd() + "/public/uploads/" + picName, function (err) {
             if (err) return next(err);
             doUpdate();
         });

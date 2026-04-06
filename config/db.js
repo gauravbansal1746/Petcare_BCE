@@ -1,18 +1,40 @@
-var mysql  = require("mysql");
+var mysql2  = require("mysql2");
+var bcrypt  = require("bcryptjs");
 var logger = require("./logger");
+
+function env(name, fallback) {
+    var v = process.env[name];
+    return v != null && String(v).trim() !== "" ? v : fallback;
+}
+
+function safeLogDbTarget() {
+    // Avoid logging secrets; only log host + db if possible
+    if (!process.env.DB_URL) return { host: env("DB_HOST", env("MYSQL_HOST", "127.0.0.1")), database: env("DB_NAME", env("MYSQL_DATABASE", "petcare")) };
+    try {
+        var u = new URL(process.env.DB_URL);
+        return { host: u.hostname, database: (u.pathname || "").replace(/^\//, "") || "(unknown)" };
+    } catch (_) {
+        return { host: "(from DB_URL)", database: "(from DB_URL)" };
+    }
+}
 
 // ── Connection Pool ───────────────────────────────────────────────────────────
 // Local defaults match typical XAMPP/WAMP. For deployment, set MYSQL_* in .env
 // (or the host platform’s environment) to your managed MySQL host and credentials.
-var pool = mysql.createPool({
-    host:              process.env.MYSQL_HOST || "127.0.0.1",
-    user:              process.env.MYSQL_USER || "root",
-    password:          process.env.MYSQL_PASSWORD || "",
-    database:          process.env.MYSQL_DATABASE || "petcare",
-    connectionLimit:   parseInt(process.env.MYSQL_CONNECTION_LIMIT, 10) || 10,
-    waitForConnections: true,
-    queueLimit:        0
-});
+var pool = process.env.DB_URL
+    ? mysql2.createPool(process.env.DB_URL)
+    : mysql2.createPool({
+          // Production-friendly names (preferred): DB_*
+          // Back-compat: MYSQL_*
+          host:              env("DB_HOST", env("MYSQL_HOST", "127.0.0.1")),
+          user:              env("DB_USER", env("MYSQL_USER", "root")),
+          password:          env("DB_PASSWORD", env("MYSQL_PASSWORD", "")),
+          database:          env("DB_NAME", env("MYSQL_DATABASE", "petcare")),
+          port:              parseInt(env("DB_PORT", env("MYSQL_PORT", "3306")), 10) || 3306,
+          connectionLimit:   parseInt(env("DB_CONNECTION_LIMIT", env("MYSQL_CONNECTION_LIMIT", "10")), 10) || 10,
+          waitForConnections: true,
+          queueLimit:        0
+      });
 
 // ── Schema compatibility (must run after DB is reachable) ──────────────────
 // bcrypt hashes are 60 chars ($2a$/$2b$…); VARCHAR(50) truncates them → "invalid password" on login.
@@ -32,6 +54,39 @@ function applySchemaFixes() {
         }
         logger.info("Database schema OK: users.pwd is VARCHAR(255) (safe for bcrypt)", { meta: {} });
         console.log("[petcare] users.pwd column set to VARCHAR(255).");
+    });
+
+    // Ensure a default admin exists (requested: hardcoded credentials).
+    // This does NOT bypass DB auth; it inserts the admin user if missing.
+    var ADMIN_EMAIL = "admin@gmail.com";
+    var ADMIN_PLAIN = "admin123";
+    pool.query("SELECT emailid FROM users WHERE emailid=?", [ADMIN_EMAIL], function (e, rows) {
+        if (e) {
+            logger.warn("Default admin check failed", { meta: { error: e.message } });
+            return;
+        }
+        if (rows && rows.length > 0) return; // already exists; do not overwrite password
+
+        bcrypt.hash(ADMIN_PLAIN, 10, function (hashErr, hash) {
+            if (hashErr) {
+                logger.warn("Default admin hash failed", { meta: { error: hashErr.message } });
+                return;
+            }
+            pool.query(
+                "INSERT INTO users (emailid, pwd, utype, status) VALUES (?,?, 'admin', 1)",
+                [ADMIN_EMAIL, hash],
+                function (insErr) {
+                    if (insErr) {
+                        logger.warn("Default admin insert failed", { meta: { error: insErr.message } });
+                        return;
+                    }
+                    logger.info("Default admin created", { meta: { email: ADMIN_EMAIL } });
+                    if (process.env.NODE_ENV !== "production") {
+                        console.log("[petcare] Default admin ready:", ADMIN_EMAIL, "/", ADMIN_PLAIN);
+                    }
+                }
+            );
+        });
     });
 
     // Legacy schemas had INT columns for contact/pic fields.
@@ -66,7 +121,7 @@ pool.getConnection(function (err, connection) {
         logger.error("Database connection failed", { meta: { error: err.message } });
         return;
     }
-    logger.info("Database pool connected successfully", { meta: { host: "127.0.0.1", database: "petcare" } });
+    logger.info("Database pool connected successfully", { meta: safeLogDbTarget() });
     connection.release();
     applySchemaFixes();
 });

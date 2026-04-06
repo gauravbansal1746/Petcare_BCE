@@ -16,7 +16,8 @@ var helmetMiddleware = helmet({
             scriptSrc:   ["'self'", "https://cdn.jsdelivr.net", "https://ajax.googleapis.com", "'unsafe-inline'"],
             styleSrc:    ["'self'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com", "'unsafe-inline'"],
             fontSrc:     ["'self'", "https://fonts.gstatic.com"],
-            imgSrc:      ["'self'", "data:", "https://via.placeholder.com"],
+            // Allow Cloudinary images in production uploads
+            imgSrc:      ["'self'", "data:", "https://via.placeholder.com", "https://res.cloudinary.com", "https://*.cloudinary.com"],
             connectSrc:  ["'self'"],
             objectSrc:   ["'none'"],
             upgradeInsecureRequests: isProd ? [] : null   // only force HTTPS in production

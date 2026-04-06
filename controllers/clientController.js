@@ -1,6 +1,8 @@
 var dbRef                  = require("../config/db");
 var AppError               = require("../utils/AppError");
 var resolveClientColumns   = require("../utils/clientDbColumns").resolveClientColumns;
+var cloudinaryUpload       = require("../utils/cloudinary").uploadFile;
+var cloudinaryEnabled      = require("../utils/cloudinary").isEnabled;
 
 exports.createProfile = function (req, res, next) {
     var pic1 = "nopic.png";
@@ -28,33 +30,40 @@ exports.createProfile = function (req, res, next) {
         });
     }
 
-    if (req.files && req.files.ppic) {
+    function handleUpload(fileKey, subfolder, setOut) {
+        if (!req.files || !req.files[fileKey]) return;
         pending++;
-        pic1 = req.files.ppic.name;
-        req.files.ppic.mv(process.cwd() + "/public/uploads/" + pic1, function (err) {
+        var f = req.files[fileKey];
+
+        if (cloudinaryEnabled()) {
+            cloudinaryUpload(f, { subfolder: subfolder }, function (err, out) {
+                if (aborted) return;
+                if (err) {
+                    aborted = true;
+                    return next(err);
+                }
+                setOut(out && out.url ? out.url : "nopic.png");
+                pending--;
+                finishIfDone();
+            });
+            return;
+        }
+
+        var name = f.name;
+        f.mv(process.cwd() + "/public/uploads/" + name, function (err) {
             if (aborted) return;
             if (err) {
                 aborted = true;
                 return next(err);
             }
+            setOut(name);
             pending--;
             finishIfDone();
         });
     }
 
-    if (req.files && req.files.idpic) {
-        pending++;
-        pic2 = req.files.idpic.name;
-        req.files.idpic.mv(process.cwd() + "/public/uploads/" + pic2, function (err) {
-            if (aborted) return;
-            if (err) {
-                aborted = true;
-                return next(err);
-            }
-            pending--;
-            finishIfDone();
-        });
-    }
+    handleUpload("ppic", "client/profile", function (v) { pic1 = v; });
+    handleUpload("idpic", "client/idproof", function (v) { pic2 = v; });
 
     // No uploads? Insert immediately.
     finishIfDone();
@@ -99,34 +108,40 @@ exports.updateProfile = function (req, res, next) {
         });
     }
 
-    if (req.files) {
-        if (req.files.ppic) {
-            pending++;
-            ppic = req.files.ppic.name;
-            req.files.ppic.mv(process.cwd() + "/public/uploads/" + ppic, function (err) {
+    function handleUpload(fileKey, subfolder, setOut) {
+        if (!req.files || !req.files[fileKey]) return;
+        pending++;
+        var f = req.files[fileKey];
+
+        if (cloudinaryEnabled()) {
+            cloudinaryUpload(f, { subfolder: subfolder }, function (err, out) {
                 if (aborted) return;
                 if (err) {
                     aborted = true;
                     return next(err);
                 }
+                setOut(out && out.url ? out.url : "nopic.png");
                 pending--;
                 doUpdate();
             });
+            return;
         }
-        if (req.files.idpic) {
-            pending++;
-            idpic = req.files.idpic.name;
-            req.files.idpic.mv(process.cwd() + "/public/uploads/" + idpic, function (err) {
-                if (aborted) return;
-                if (err) {
-                    aborted = true;
-                    return next(err);
-                }
-                pending--;
-                doUpdate();
-            });
-        }
+
+        var name = f.name;
+        f.mv(process.cwd() + "/public/uploads/" + name, function (err) {
+            if (aborted) return;
+            if (err) {
+                aborted = true;
+                return next(err);
+            }
+            setOut(name);
+            pending--;
+            doUpdate();
+        });
     }
+
+    handleUpload("ppic", "client/profile", function (v) { ppic = v; });
+    handleUpload("idpic", "client/idproof", function (v) { idpic = v; });
 
     // No uploads? Update immediately.
     doUpdate();

@@ -33,3 +33,6 @@
 {"level":"error","message":"HTTP GET /api/v1/admin/clients?page=1&limit=100","meta":{"ip":"::1","method":"GET","responseTime":"13ms","status":500,"url":"/api/v1/admin/clients?page=1&limit=100","user":"admin@gmail.com"},"timestamp":"2026-04-06 11:55:54"}
 {"level":"error","message":"Database column mismatch","meta":{"error":"ER_BAD_FIELD_ERROR: Unknown column 'profilepic' in 'field list'","method":"GET","url":"/api/v1/admin/clients?page=1&limit=100"},"timestamp":"2026-04-06 11:56:29"}
 {"level":"error","message":"HTTP GET /api/v1/admin/clients?page=1&limit=100","meta":{"ip":"::1","method":"GET","responseTime":"96ms","status":500,"url":"/api/v1/admin/clients?page=1&limit=100","user":"admin@gmail.com"},"timestamp":"2026-04-06 11:56:29"}
+{"level":"error","message":"Database connection failed","meta":{"error":"getaddrinfo ENOTFOUND mysql.railway.internal"},"timestamp":"2026-04-06 14:55:22"}
+{"level":"error","message":"Database connection failed","meta":{"error":"getaddrinfo ENOTFOUND mysql.railway.internal"},"timestamp":"2026-04-06 14:56:36"}
+{"level":"error","message":"CRITICAL: could not widen users.pwd — logins will fail until you run SQL manually","meta":{"code":"ER_NO_SUCH_TABLE","error":"Table 'railway.users' doesn't exist","sql":"ALTER TABLE users MODIFY COLUMN pwd VARCHAR(255) NOT NULL"},"timestamp":"2026-04-06 14:59:39"}
