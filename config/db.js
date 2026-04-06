@@ -22,19 +22,19 @@ function safeLogDbTarget() {
 // Local defaults match typical XAMPP/WAMP. For deployment, set MYSQL_* in .env
 // (or the host platform’s environment) to your managed MySQL host and credentials.
 var pool = process.env.DB_URL
-    ? mysql2.createPool(process.env.DB_URL)
-    : mysql2.createPool({
-          // Production-friendly names (preferred): DB_*
-          // Back-compat: MYSQL_*
-          host:              env("DB_HOST", env("MYSQL_HOST", "127.0.0.1")),
-          user:              env("DB_USER", env("MYSQL_USER", "root")),
-          password:          env("DB_PASSWORD", env("MYSQL_PASSWORD", "")),
-          database:          env("DB_NAME", env("MYSQL_DATABASE", "petcare")),
-          port:              parseInt(env("DB_PORT", env("MYSQL_PORT", "3306")), 10) || 3306,
-          connectionLimit:   parseInt(env("DB_CONNECTION_LIMIT", env("MYSQL_CONNECTION_LIMIT", "10")), 10) || 10,
-          waitForConnections: true,
-          queueLimit:        0
-      });
+  ? mysql2.createPool({
+      uri: process.env.DB_URL
+    })
+  : mysql2.createPool({
+      host: env("DB_HOST", env("MYSQL_HOST", "127.0.0.1")),
+      user: env("DB_USER", env("MYSQL_USER", "root")),
+      password: env("DB_PASSWORD", env("MYSQL_PASSWORD", "")),
+      database: env("DB_NAME", env("MYSQL_DATABASE", "petcare")),
+      port: parseInt(env("DB_PORT", env("MYSQL_PORT", "3306")), 10),
+      connectionLimit: parseInt(env("DB_CONNECTION_LIMIT", env("MYSQL_CONNECTION_LIMIT", "10")), 10),
+      waitForConnections: true,
+      queueLimit: 0
+    });
 
 // ── Schema compatibility (must run after DB is reachable) ──────────────────
 // bcrypt hashes are 60 chars ($2a$/$2b$…); VARCHAR(50) truncates them → "invalid password" on login.
