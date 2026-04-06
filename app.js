@@ -9,6 +9,10 @@ var app = express();
 // Order matters: helmet and CORS must run before any route or body parser.
 
 // 1. Helmet — sets all security headers in one call
+app.get("/", (req, res) => {
+    res.send("PetCare API is running 🚀");
+  });
+
 app.use(security.helmetMiddleware);
 
 // 2. CORS — must come before routes so preflight OPTIONS requests are handled
