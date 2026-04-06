@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Client Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="css/profile-client.css">
+    <script src="js/profile-client.js"></script>
+    <script src="js/petcare-logout.js"></script>
+    <script src="js/petcare-require-login.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="js/india-state-cities-data.js"></script>
+    <script src="js/caretaker-state-cities.js"></script>
+    <script src="js/petcare-pincodes.js"></script>
+    <script>
+        function img_pPic(input) {
+            document.getElementById("ppicPrev").src = (window.URL ? URL : webkitURL).createObjectURL(input.files[0]);
+        }
+        function img_idPic(input) {
+            document.getElementById("idpicPrev").src = (window.URL ? URL : webkitURL).createObjectURL(input.files[0]);
+        }
+
+        function petcareAuthHeader() {
+            var t = localStorage.getItem("token");
+            return t ? { Authorization: "Bearer " + t } : {};
+        }
+
+        function extractApiError(xhr, fallback) {
+            var body = xhr && xhr.responseJSON;
+            if (body && Array.isArray(body.errors) && body.errors.length) {
+                return body.errors.map(function (e) { return e.message || e.field; }).join("\n");
+            }
+            return (body && body.message) ? body.message : fallback;
+        }
+
+        $(document).ready(function () {
+            var saved = localStorage.getItem("email");
+            if (saved) {
+                $("#clientEmail").val(saved);
+                $("#clientEmail").prop("readonly", true);
+            }
+
+            if (typeof initCaretakerStateCitySelects === "function") {
+                initCaretakerStateCitySelects("clientState", "clientCity");
+            }
+            if (typeof petcareInitPincodeAutofill === "function") {
+                petcareInitPincodeAutofill({ stateId: "clientState", cityId: "clientCity", pinId: "clientPin" });
+            }
+            $("#clientState").on("change", function () {
+                console.log("[profile-client] state changed:", this.value);
+            });
+
+            function normalizeClientStateName(s) {
+                var v = (s || "").toString().trim();
+                if (v === "Andaman and Nicobar Islands") return "Andaman & Nicobar";
+                if (v === "Dadra and Nagar Haveli") return "Dadra & Nagar Haveli";
+                if (v === "Daman and Diu") return "Daman & Diu";
+                if (v === "Jammu and Kashmir") return "Jammu & Kashmir";
+                return v;
+            }
+
+            $("#btn-Search").click(function () {
+                var custEmail = (localStorage.getItem("email") || $("#clientEmail").val() || "").trim();
+                if (!custEmail) {
+                    alert("Enter an email to load the profile.");
+                    return;
+                }
+                $("#clientEmail").val(custEmail);
+                console.log("[profile-client] search clicked for", custEmail);
+                $.ajax({
+                    type: "get",
+                    url: "/api/v1/clients/profile",
+                    data: { emailforServer: custEmail },
+                    headers: petcareAuthHeader(),
+                    dataType: "json"
+                }).done(function (body) {
+                    if (!body || !body.data || body.data.length === 0) {
+                        alert("No profile found for this account yet. Fill the form and click Save to create it.");
+                        return;
+                    }
+                    var row = body.data[0];
+                    console.log("[profile-client] loaded profile for", custEmail);
+                    $("#clientName").val(row.name);
+                    $("#clientContact").val(String(row.mobile || "").replace(/\D/g, "").slice(0, 10));
+                    $("#clientAddress").val(row.address);
+                    var normalizedState = normalizeClientStateName(row.state);
+                    $("#clientState").val(normalizedState);
+                    if (typeof petcareSyncCaretakerCities === "function") {
+                        petcareSyncCaretakerCities("clientState", "clientCity", row.city);
+                    } else {
+                        $("#clientCity").val(row.city);
+                    }
+                    // Trigger pin recompute after programmatic city set
+                    setTimeout(function () {
+                        var el = document.getElementById("clientCity");
+                        if (el) el.dispatchEvent(new Event("change"));
+                    }, 0);
+                    $("#clientPin").val(row.pin);
+                    $("#clientPets").val(row.pets || "");
+
+                    var profilePic = row.profilepic || "nopic.png";
+                    var idProofPic = row.idproofpic || "nopic.png";
+                    $("#hdn-1").val(profilePic);
+                    $("#hdn-2").val(idProofPic);
+                    $("#ppicPrev").prop("src", "uploads/" + profilePic);
+                    $("#idpicPrev").prop("src", "uploads/" + idProofPic);
+                }).fail(function (xhr) {
+                    var msg = extractApiError(xhr, "Could not load profile.");
+                    console.warn("[profile-client] load failed", xhr.status, msg);
+                    alert(msg);
+                });
+            });
+
+            function submitClientProfile(method) {
+                // Auto-normalize strict-validated fields before sending
+                var contactDigits = ($("#clientContact").val() || "").replace(/\D/g, "").slice(0, 10);
+                $("#clientContact").val(contactDigits);
+
+                var emailNow = (localStorage.getItem("email") || $("#clientEmail").val() || "").trim();
+                if (emailNow) $("#clientEmail").val(emailNow);
+
+                var formData = new FormData($("form")[0]);
+                $.ajax({
+                    url: "/api/v1/clients/profile",
+                    type: method,
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: petcareAuthHeader(),
+                    dataType: "json"
+                }).done(function (body) {
+                    alert((body && body.message) ? body.message : "Saved.");
+                    var emailNow = $("#clientEmail").val();
+                    if (emailNow) $("#btn-Search").click();
+                }).fail(function (xhr) {
+                    var msg = extractApiError(xhr, "Save failed.");
+                    if (xhr.responseJSON && xhr.responseJSON.errors)
+                        console.warn("[profile-client] validation", xhr.responseJSON.errors);
+                    alert(msg);
+                });
+            }
+
+            $("#btn-Save").click(function (e) {
+                e.preventDefault();
+                submitClientProfile("POST");
+            });
+            $("#btn-Update").click(function (e) {
+                e.preventDefault();
+                submitClientProfile("PUT");
+            });
+        });
+    </script>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="container-fluid container justify-content-center">
+            <a class="navbar-brand" href="#">
+                <span id="title-text">
+                    Client Profile
+                </span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <form class="row g-3" enctype="multipart/form-data" method="post" onsubmit="return false;">
+            <input type="hidden" name="hdn-1" id="hdn-1">
+            <input type="hidden" name="hdn-2" id="hdn-2">
+            <div class="col-md-6">
+                <label for="clientEmail" class="form-label">Email</label>
+                <input type="email" class="form-control" id="clientEmail" name="clientEmail">
+            </div>
+            <div class="col-md-3 mt-5">
+                <button type="button" class="btn btn-outline-success" id="btn-Search">Search</button>
+            </div>
+            <div class="col-md-6">
+                <label for="clientName" class="form-label">Name</label>
+                <input type="text" class="form-control" id="clientName" name="clientName">
+            </div>
+            <div class="col-md-6">
+                <label for="clientContact" class="form-label">Contact</label>
+                <input type="text" class="form-control" id="clientContact" name="clientContact">
+            </div>
+            <div class="col-md-12">
+                <label for="clientAddress" class="form-label">Address</label>
+                <input type="text" class="form-control" id="clientAddress" name="clientAddress">
+            </div>
+
+            <div class="col-md-6">
+                <label for="clientCity" class="form-label">City</label>
+                <select id="clientCity" name="clientCity" class="form-select" required></select>
+            </div>
+            <div class="col-md-4">
+                <label for="clientState" class="form-label">State</label>
+                <select id="clientState" name="clientState" class="form-select">
+                    <option selected>Choose...</option>
+                    <option value=”Andaman and Nicobar Islands”>Andaman and Nicobar Islands</option>
+                    <option value=”Andhra Pradesh”>Andhra Pradesh</option>
+                    <option value=”Arunachal Pradesh”>Arunachal Pradesh</option>
+                    <option value=”Assam”>Assam</option>
+                    <option value=”Bihar”>Bihar</option>
+                    <option value=”Chandigarh”>Chandigarh</option>
+                    <option value=”Chhattisgarh”>Chhattisgarh</option>
+                    <option value=”Dadra and Nagar Haveli”>Dadra and Nagar Haveli</option>
+                    <option value=”Daman and Diu”>Daman and Diu</option>
+                    <option value=”Delhi”>Delhi</option>
+                    <option value=”Goa”>Goa</option>
+                    <option value=”Gujarat”>Gujarat</option>
+                    <option value=”Haryana”>Haryana</option>
+                    <option value=”Himachal Pradesh”>Himachal Pradesh</option>
+                    <option value=”Jammu and Kashmir”>Jammu and Kashmir</option>
+                    <option value=”Jharkhand”>Jharkhand</option>
+                    <option value=”Karnataka”>Karnataka</option>
+                    <option value=”Kerala”>Kerala</option>
+                    <option value=”Lakshadweep”>Lakshadweep</option>
+                    <option value=”Madhya Pradesh”>Madhya Pradesh</option>
+                    <option value=”Maharashtra”>Maharashtra</option>
+                    <option value=”Manipur”>Manipur</option>
+                    <option value=”Meghalaya”>Meghalaya</option>
+                    <option value=”Mizoram”>Mizoram</option>
+                    <option value=”Nagaland”>Nagaland</option>
+                    <option value=”Orissa”>Orissa</option>
+                    <option value=”Pondicherry”>Pondicherry</option>
+                    <option value=”Punjab”>Punjab</option>
+                    <option value=”Rajasthan”>Rajasthan</option>
+                    <option value=”Sikkim”>Sikkim</option>
+                    <option value=”Tamil Nadu”>Tamil Nadu</option>
+                    <option value=”Tripura”>Tripura</option>
+                    <option value=”Uttaranchal”>Uttaranchal</option>
+                    <option value=”Uttar Pradesh”>Uttar Pradesh</option>
+                    <option value=”West Bengal”>West Bengal</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="clientPin" class="form-label">Pin</label>
+                <input type="text" class="form-control" id="clientPin" name="clientPin" readonly>
+            </div>
+
+            <div class="col-md-6">
+                <label for="ppic" class="form-label">Profile Pic</label>
+                <input type="file" onchange="img_pPic(this);" class="form-control" id="ppic"
+                    name="ppic" accept="image/gif, image/jpeg, image/png">
+            </div>
+            <div class="col-md-6">
+                <label for="idpic" class="form-label"> Id Proof Pic</label>
+                <input type="file" onchange="img_idPic(this);" class="form-control" id="idpic" name="idpic"
+                    accept="image/gif, image/jpeg, image/png">
+            </div>
+            <div id="preview-div">
+                <div class="col-md-3">
+                    <!-- <label for="inputppicPrev" class="form-label"></label> -->
+                    <img src="https://via.placeholder.com/234x100?text=Profile+ Pic +Preview" alt="" id="ppicPrev"
+                        width="100" class="form-control " height="100" title=" Profile Pic Preview">
+                </div>
+                <div class="col-md-3">
+                    <!-- <label for="inputidpicPrev" class="form-label"></label> -->
+                    <img src="https://via.placeholder.com/234x100?text=Id +Preview" alt="" id="idpicPrev" width="100"
+                        class="form-control" height="100" title="Id Preview">
+                </div>
+            </div>
+            <div class="col-md-12">
+                <label for="clientPets" class="form-label">Pets</label>
+                <input type="text" class="form-control" id="clientPets" name="clientPets">
+            </div>
+
+            <div class="col-md-12">
+                    <div id="btn-div">
+                        <center>
+                            <button type="button" class="btn btn-outline-success me-md-2" id="btn-Update">Update</button>
+                            <button type="button" class="btn btn-outline-success" id="btn-Save">Save</button>
+                        </center>
+                    </div>
+            </div>
+
+        </form>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>

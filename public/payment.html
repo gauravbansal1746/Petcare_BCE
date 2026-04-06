@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Payment</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <script src="js/petcare-require-login.js"></script>
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="card mx-auto" style="max-width: 560px;">
+            <div class="card-body">
+                <h4 class="card-title">Complete Payment</h4>
+                <p class="text-muted mb-1">Booking ID: <span id="booking-id">-</span></p>
+                <p class="text-muted">Amount: Rs. 499 (simulated)</p>
+                <div class="d-grid gap-2">
+                    <button id="pay-btn" type="button" class="btn btn-success">Pay Now</button>
+                    <a class="btn btn-outline-secondary" href="/my-bookings">Go to My Bookings</a>
+                </div>
+                <div id="msg" class="alert mt-3 d-none"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            var bookingId = params.get("bookingId");
+            var idEl = document.getElementById("booking-id");
+            var btn = document.getElementById("pay-btn");
+            var msg = document.getElementById("msg");
+            idEl.textContent = bookingId || "-";
+
+            function show(type, text) {
+                msg.className = "alert mt-3 alert-" + type;
+                msg.textContent = text;
+            }
+
+            if (!bookingId) {
+                btn.disabled = true;
+                show("warning", "Missing bookingId in URL.");
+                return;
+            }
+
+            btn.addEventListener("click", function () {
+                var token = localStorage.getItem("token");
+                btn.disabled = true;
+                btn.textContent = "Processing...";
+                fetch("/api/v1/payment/" + encodeURIComponent(bookingId), {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: "Bearer " + token
+                    },
+                    body: JSON.stringify({ amount: 499, cardNumber: "4242424242424242" })
+                })
+                    .then(function (res) {
+                        return res.json().then(function (body) {
+                            return { ok: res.ok, status: res.status, body: body };
+                        });
+                    })
+                    .then(function (out) {
+                        if (!out.ok) {
+                            show("danger", (out.body && out.body.message) || ("Payment failed (HTTP " + out.status + ")"));
+                            return;
+                        }
+                        show("success", (out.body && out.body.message) || "Payment successful.");
+                        setTimeout(function () {
+                            window.location.href = "/my-bookings";
+                        }, 1200);
+                    })
+                    .catch(function () {
+                        show("danger", "Network error while processing payment.");
+                    })
+                    .finally(function () {
+                        btn.disabled = false;
+                        btn.textContent = "Pay Now";
+                    });
+            });
+        })();
+    </script>
+</body>
+</html>

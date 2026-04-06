@@ -1,0 +1,40 @@
+{"level":"info","message":"Server started on port 3000","meta":{"env":"development","port":3000},"timestamp":"2026-04-05 23:21:24"}
+{"level":"error","message":"Database connection failed","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306"},"timestamp":"2026-04-05 23:21:24"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE users ADD INDEX idx_users_emailid (emailid)"},"timestamp":"2026-04-05 23:21:24"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE clients ADD INDEX idx_clients_email (email)"},"timestamp":"2026-04-05 23:21:24"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE caretakers ADD INDEX idx_caretakers_email (email)"},"timestamp":"2026-04-05 23:21:24"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE caretakers ADD INDEX idx_caretakers_city  (city)"},"timestamp":"2026-04-05 23:21:24"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE bookings ADD INDEX idx_bookings_userId      (userId)"},"timestamp":"2026-04-05 23:21:24"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE bookings ADD INDEX idx_bookings_caretakerId (caretakerId)"},"timestamp":"2026-04-05 23:21:24"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE bookings ADD INDEX idx_bookings_status      (status)"},"timestamp":"2026-04-05 23:21:24"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE payments ADD INDEX idx_payments_bookingId (bookingId)"},"timestamp":"2026-04-05 23:21:24"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE payments ADD INDEX idx_payments_userId    (userId)"},"timestamp":"2026-04-05 23:21:24"}
+{"level":"info","message":"Server started on port 3000","meta":{"env":"development","port":3000},"timestamp":"2026-04-05 23:26:50"}
+{"level":"error","message":"Database connection failed","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306"},"timestamp":"2026-04-05 23:26:50"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE users ADD INDEX idx_users_emailid (emailid)"},"timestamp":"2026-04-05 23:26:50"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE clients ADD INDEX idx_clients_email (email)"},"timestamp":"2026-04-05 23:26:50"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE caretakers ADD INDEX idx_caretakers_email (email)"},"timestamp":"2026-04-05 23:26:50"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE caretakers ADD INDEX idx_caretakers_city  (city)"},"timestamp":"2026-04-05 23:26:50"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE bookings ADD INDEX idx_bookings_userId      (userId)"},"timestamp":"2026-04-05 23:26:50"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE bookings ADD INDEX idx_bookings_caretakerId (caretakerId)"},"timestamp":"2026-04-05 23:26:50"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE bookings ADD INDEX idx_bookings_status      (status)"},"timestamp":"2026-04-05 23:26:50"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE payments ADD INDEX idx_payments_bookingId (bookingId)"},"timestamp":"2026-04-05 23:26:50"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE payments ADD INDEX idx_payments_userId    (userId)"},"timestamp":"2026-04-05 23:26:50"}
+{"level":"error","message":"Database connection failed","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306"},"timestamp":"2026-04-05 23:30:40"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE users ADD INDEX idx_users_emailid (emailid)"},"timestamp":"2026-04-05 23:30:40"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE clients ADD INDEX idx_clients_email (email)"},"timestamp":"2026-04-05 23:30:40"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE caretakers ADD INDEX idx_caretakers_email (email)"},"timestamp":"2026-04-05 23:30:40"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE caretakers ADD INDEX idx_caretakers_city  (city)"},"timestamp":"2026-04-05 23:30:40"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE bookings ADD INDEX idx_bookings_userId      (userId)"},"timestamp":"2026-04-05 23:30:40"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE bookings ADD INDEX idx_bookings_caretakerId (caretakerId)"},"timestamp":"2026-04-05 23:30:40"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE bookings ADD INDEX idx_bookings_status      (status)"},"timestamp":"2026-04-05 23:30:40"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE payments ADD INDEX idx_payments_bookingId (bookingId)"},"timestamp":"2026-04-05 23:30:40"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"connect ECONNREFUSED 127.0.0.1:3306","sql":"ALTER TABLE payments ADD INDEX idx_payments_userId    (userId)"},"timestamp":"2026-04-05 23:30:40"}
+{"level":"info","message":"Database pool connected successfully","meta":{"database":"petcare","host":"127.0.0.1"},"timestamp":"2026-04-05 23:38:26"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"ER_NO_SUCH_TABLE: Table 'petcare.payments' doesn't exist","sql":"ALTER TABLE payments ADD INDEX idx_payments_bookingId (bookingId)"},"timestamp":"2026-04-05 23:38:26"}
+{"level":"warn","message":"Index creation skipped","meta":{"error":"ER_NO_SUCH_TABLE: Table 'petcare.payments' doesn't exist","sql":"ALTER TABLE payments ADD INDEX idx_payments_userId    (userId)"},"timestamp":"2026-04-05 23:38:26"}
+{"level":"info","message":"Server started on port 3000","meta":{"env":"development","port":3000},"timestamp":"2026-04-05 23:41:50"}
+{"level":"info","message":"Database pool connected successfully","meta":{"database":"petcare","host":"127.0.0.1"},"timestamp":"2026-04-05 23:41:50"}
+{"level":"info","message":"Server started on port 3000","meta":{"env":"development","port":3000},"timestamp":"2026-04-05 23:46:46"}
+{"level":"info","message":"Database pool connected successfully","meta":{"database":"petcare","host":"127.0.0.1"},"timestamp":"2026-04-05 23:46:46"}
+{"level":"info","message":"Database pool connected successfully","meta":{"database":"petcare","host":"127.0.0.1"},"timestamp":"2026-04-05 23:54:17"}

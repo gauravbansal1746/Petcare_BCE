@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "c:\\Users\\gaura\\Downloads\\Project BCE\\logs\\.2ef49b96989ee515c2e49ccf6c97e585891ae3a0-audit.json",
+    "files": [
+        {
+            "date": 1775411484055,
+            "name": "c:\\Users\\gaura\\Downloads\\Project BCE\\logs\\error-2026-04-05.log",
+            "hash": "2e1aff2fd364c3d886d126a099a551b6580d0e2dfeebad63293854faa010a11e"
+        }
+    ],
+    "hashType": "sha256"
+}

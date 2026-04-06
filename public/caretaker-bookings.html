@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Booking Requests</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="js/angular.min.js"></script>
+    <script src="js/petcare-admin-http.js"></script>
+    <script src="js/petcare-require-login.js"></script>
+    <script src="js/petcare-logout.js"></script>
+    <script>
+        angular.module("myModule").controller("myController", function ($scope, $http) {
+            $scope.rows = [];
+            $scope.loading = false;
+            $scope.error = "";
+
+            $scope.load = function () {
+                $scope.loading = true;
+                $scope.error = "";
+                $http.get("/api/v1/bookings/caretaker?page=1&limit=100").then(function (resp) {
+                    $scope.rows = (resp.data && resp.data.bookings) ? resp.data.bookings : [];
+                }, function (err) {
+                    $scope.error = (err.data && err.data.message) || "Failed to load bookings.";
+                }).finally(function () {
+                    $scope.loading = false;
+                });
+            };
+
+            $scope.setStatus = function (id, status) {
+                $http.put("/api/v1/bookings/" + id + "/status", { status: status }).then(function () {
+                    $scope.load();
+                }, function (err) {
+                    alert((err.data && err.data.message) || "Failed to update booking.");
+                });
+            };
+        });
+    </script>
+</head>
+<body ng-app="myModule" ng-controller="myController">
+    <nav class="navbar bg-light">
+        <div class="container justify-content-between">
+            <span class="navbar-brand">Booking Requests</span>
+            <div>
+                <a href="/dcaretaker" class="btn btn-outline-secondary btn-sm">Back</a>
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="petcareLogout();">Log out</button>
+            </div>
+        </div>
+    </nav>
+    <div class="container py-4">
+        <button class="btn btn-success mb-3" ng-click="load()">Load Booking Requests</button>
+        <div ng-if="loading" class="alert alert-info">Loading...</div>
+        <div ng-if="error" class="alert alert-danger">{{error}}</div>
+        <table class="table table-bordered table-sm" ng-if="rows.length">
+            <thead>
+                <tr>
+                    <th>ID</th><th>Client</th><th>Pet Type</th><th>City</th><th>Date</th><th>Time</th><th>Status</th><th>Payment</th><th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="b in rows">
+                    <td>{{b.id}}</td>
+                    <td>{{b.userId}}</td>
+                    <td>{{b.petType}}</td>
+                    <td>{{b.city}}</td>
+                    <td>{{b.date | date:'yyyy-MM-dd'}}</td>
+                    <td>{{b.time}}</td>
+                    <td>{{b.status}}</td>
+                    <td>{{b.paymentStatus}}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-success" ng-click="setStatus(b.id, 'confirmed')">Accept</button>
+                        <button class="btn btn-sm btn-outline-danger" ng-click="setStatus(b.id, 'cancelled')">Reject</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

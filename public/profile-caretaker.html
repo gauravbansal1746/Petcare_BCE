@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Caretaker Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="css/profile-client.css">
+    <script src="js/profile-caretaker.js"></script>
+    <script src="js/india-state-cities-data.js"></script>
+    <script src="js/caretaker-state-cities.js"></script>
+    <script src="js/petcare-pincodes.js"></script>
+    <script src="js/petcare-logout.js"></script>
+    <script src="js/petcare-require-login.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script>
+        function img_pPic(input) {
+            document.getElementById("ppicPrev").src = (window.URL ? URL : webkitURL).createObjectURL(input.files[0]);
+        }
+        function img_idPic(input) {
+            document.getElementById("idpicPrev").src = (window.URL ? URL : webkitURL).createObjectURL(input.files[0]);
+        }
+
+        function petcareAuthHeader() {
+            var t = localStorage.getItem("token");
+            return t ? { Authorization: "Bearer " + t } : {};
+        }
+
+        function extractApiError(xhr, fallback) {
+            var body = xhr && xhr.responseJSON;
+            if (body && Array.isArray(body.errors) && body.errors.length) {
+                return body.errors.map(function (e) { return e.message || e.field; }).join("\n");
+            }
+            return (body && body.message) ? body.message : fallback;
+        }
+
+        $(document).ready(function () {
+            initCaretakerStateCitySelects("sts", "caretkrCity");
+            if (typeof petcareInitPincodeAutofill === "function") {
+                petcareInitPincodeAutofill({ stateId: "sts", cityId: "caretkrCity", pinId: "caretkrPin" });
+            }
+
+            var saved = localStorage.getItem("email");
+            if (saved) {
+                $("#caretkrEmail").val(saved);
+                $("#caretkrEmail").prop("readonly", true);
+            }
+
+            $("#btn-Search").click(function () {
+                var custEmail = (localStorage.getItem("email") || $("#caretkrEmail").val() || "").trim();
+                if (!custEmail) {
+                    alert("Enter an email to load the profile.");
+                    return;
+                }
+                $("#caretkrEmail").val(custEmail);
+                console.log("[profile-caretaker] search clicked for", custEmail);
+                $.ajax({
+                    type: "get",
+                    url: "/api/v1/caretakers/profile",
+                    data: { emailforServer: custEmail },
+                    headers: petcareAuthHeader(),
+                    dataType: "json"
+                }).done(function (body) {
+                    if (!body || !body.data || body.data.length === 0) {
+                        alert("No profile found for this account yet. Fill the form and click Save to create it.");
+                        return;
+                    }
+                    var row = body.data[0];
+                    console.log("[profile-caretaker] loaded profile for", custEmail);
+                    $("#caretkrName").val(row.name);
+                    $("#caretkrContact").val(String(row.mobile || "").replace(/\D/g, "").slice(0, 10));
+                    $("#caretkrAddress").val(row.address);
+                    $("#caretkrWebsite").val(row.website);
+                    $("#sts").val(row.state);
+                    petcareSyncCaretakerCities("sts", "caretkrCity", row.city);
+                    // Trigger pin recompute after programmatic city set
+                    setTimeout(function () {
+                        var el = document.getElementById("caretkrCity");
+                        if (el) el.dispatchEvent(new Event("change"));
+                    }, 0);
+                    $("#caretkrPin").val(row.pin);
+                    $("#selPets").val(row.selpets);
+                    $("#hdn").val(row.idproofpic);
+                    $("#idpicPrev").prop("src", "uploads/" + row.idproofpic);
+                }).fail(function (xhr) {
+                    var msg = extractApiError(xhr, "Could not load profile.");
+                    console.warn("[profile-caretaker] load failed", xhr.status, msg);
+                    alert(msg);
+                });
+            });
+
+            function submitCaretakerProfile(method) {
+                // Normalize fields that Joi validates strictly
+                var contactDigits = ($("#caretkrContact").val() || "").replace(/\D/g, "").slice(0, 10);
+                $("#caretkrContact").val(contactDigits);
+
+                var web = ($("#caretkrWebsite").val() || "").trim();
+                if (web && !/^https?:\/\//i.test(web)) {
+                    $("#caretkrWebsite").val("https://" + web);
+                }
+
+                var emailNow = (localStorage.getItem("email") || $("#caretkrEmail").val() || "").trim();
+                if (emailNow) $("#caretkrEmail").val(emailNow);
+
+                var formData = new FormData($("form")[0]);
+                $.ajax({
+                    url: "/api/v1/caretakers/profile",
+                    type: method,
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: petcareAuthHeader(),
+                    dataType: "json"
+                }).done(function (body) {
+                    alert((body && body.message) ? body.message : "Saved.");
+                    if ($("#caretkrEmail").val()) $("#btn-Search").click();
+                }).fail(function (xhr) {
+                    var msg = extractApiError(xhr, "Save failed.");
+                    if (xhr.responseJSON && xhr.responseJSON.errors)
+                        console.warn("[profile-caretaker] validation", xhr.responseJSON.errors);
+                    alert(msg);
+                });
+            }
+
+            $("#btn-Save").click(function (e) {
+                e.preventDefault();
+                submitCaretakerProfile("POST");
+            });
+            $("#btn-Update").click(function (e) {
+                e.preventDefault();
+                submitCaretakerProfile("PUT");
+            });
+        });
+    </script>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="container-fluid container justify-content-center">
+            <a class="navbar-brand" href="#">
+                <span id="title-text">
+                    Caretaker Profile
+                </span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <form class="row g-3" enctype="multipart/form-data" method="post" onsubmit="return false;">
+            <input type="hidden" name="hdn" id="hdn">
+
+            <div class="col-md-6">
+                <label for="caretkrEmail" class="form-label">Email</label>
+                <input type="email" class="form-control" id="caretkrEmail" name="caretkrEmail">
+            </div>
+
+            <div class="col-md-3 mt-5">
+                <button type="button" class="btn btn-outline-success" id="btn-Search">Search</button>
+            </div>
+
+            <div class="col-md-6">
+                <label for="caretkrName" class="form-label">Name</label>
+                <input type="text" class="form-control" id="caretkrName" name="caretkrName">
+            </div>
+
+            <div class="col-md-6">
+                <label for="caretkrContact" class="form-label">Contact</label>
+                <input type="text" class="form-control" id="caretkrContact" name="caretkrContact">
+            </div>
+
+            <div class="col-md-12">
+                <label for="caretkrAddress" class="form-label">Firm/Location Address</label>
+                <input type="text" class="form-control" id="caretkrAddress" name="caretkrAddress">
+            </div>
+
+            <div class="col-md-12">
+                <label for="caretkrWebsite" class="form-label">Website (optional)</label>
+                <input type="text" class="form-control" id="caretkrWebsite" name="caretkrWebsite">
+            </div>
+
+            <div class="col-md-4">
+                <label for="caretkrState" class="form-label">State</label>
+                <select id="sts" name="stt" class="form-control form-select" required></select>
+            </div>
+
+            <div class="col-md-6">
+                <label for="caretkrCity" class="form-label">City</label>
+                <select id="caretkrCity" class="form-control form-select" name="city" required></select>
+            </div>
+            <div class="col-md-2">
+                <label for="caretkrPin" class="form-label">Pin</label>
+                <input type="text" class="form-control" id="caretkrPin" name="caretkrPin" readonly>
+            </div>
+            <div class="col-md-4">
+                <label for="comboPets" class="form-label">Pets</label>
+                <select id="comboPets" name="comboPets" class="form-select" onchange="doselPets();">
+                    <option selected>Choose...</option>
+                    <option value="cat">Cat</option>
+                    <option value="dog">Dog</option>
+                    <option value="cow">Cow</option>
+                    <option value="rabbit">Rabbit</option>
+                    <option value="parrot">Parrot</option>
+                    <option value="horse">Horse</option>
+                </select>
+            </div>
+            <div class="col-md-8">
+                <label for="selPets" class="form-label">Selected Pets</label>
+                <input type="text" class="form-control" id="selPets" name="selPets">  
+            </div>
+  
+            <div class="col-md-6">
+                <label for="idpic" class="form-label"> Id Proof Pic</label>
+                <input type="file" onchange="img_idPic(this);" class="form-control" id="idpic" name="idpic"
+                    accept="image/gif, image/jpeg, image/png">
+            </div>
+                <div class="col-md-3">
+                    <!-- <label for="inputidpicPrev" class="form-label"></label> -->
+                    <img src="https://via.placeholder.com/234x100?text=Id +Preview" alt="" id="idpicPrev" width="100"
+                        class="form-control" height="100" title="Id Preview">
+                    </div>
+                    
+                    
+
+            <div class="col-md-12">
+                    <div id="btn-div">
+                        <center>
+                            <button type="button" class="btn btn-outline-success me-md-2" id="btn-Update">Update</button>
+                            <button type="button" class="btn btn-outline-success" id="btn-Save">Save</button>
+                        </center>
+                    </div>
+            </div>
+
+        </form>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>

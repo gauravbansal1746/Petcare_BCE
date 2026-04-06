@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PetSitter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+Bhai+2&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/index.css">
+
+    <!-- jQuery MUST load before index.js -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="js/index.js"></script>
+
+    <style>
+        /* Password show/hide (eye) inside input */
+        .petcare-pwd-wrap { position: relative; }
+        .petcare-pwd-wrap .form-control { padding-right: 2.5rem; }
+        .petcare-pwd-toggle {
+            position: absolute;
+            right: .75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            padding: 0;
+            line-height: 1;
+            cursor: pointer;
+            color: #198754;
+        }
+        .petcare-pwd-toggle:hover { opacity: .85; }
+        .petcare-pwd-toggle:focus { outline: 2px solid rgba(25,135,84,.35); outline-offset: 2px; border-radius: 6px; }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg pc-navbar sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#home">
+                <img src="pics/pawprint.png" alt="Pet Sitter Logo" width="30" height="24">
+                <span class="pc-brand">Pet Sitter</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#pcNav"
+                aria-controls="pcNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="pcNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                    <li class="nav-item"><a class="nav-link pc-nav-link" href="#home">Home</a></li>
+                    <li class="nav-item"><a class="nav-link pc-nav-link" href="#services">Services</a></li>
+                    <li class="nav-item"><a class="nav-link pc-nav-link" href="#about">About</a></li>
+                    <li class="nav-item"><a class="nav-link pc-nav-link" href="#contact">Contact</a></li>
+                </ul>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn pc-btn pc-btn-outline" data-bs-toggle="modal"
+                        data-bs-target="#loginModal">Login</button>
+                    <button type="button" class="btn pc-btn pc-btn-primary text-white" data-bs-toggle="modal"
+                        data-bs-target="#signupModal">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header id="home" class="pc-hero">
+        <div class="container pc-hero-inner">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <div class="pc-chip mb-3">Trusted care • Verified sitters • Secure booking</div>
+                    <h1 class="display-5 mb-3">Find Trusted Pet Sitters Near You</h1>
+                    <p class="lead mb-4">Safe, Reliable, and Loving Care for Your Pets</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a class="btn pc-btn pc-btn-primary text-white" href="/caretkr-finder">Book a Sitter</a>
+                        <a class="btn pc-btn pc-btn-outline" href="#signupModal" data-bs-toggle="modal">Become a Sitter</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Services -->
+    <section id="services" class="pc-section">
+        <div class="container">
+            <div class="mb-4">
+                <h2 class="pc-section-title">Services</h2>
+                <p class="pc-section-subtitle">Everything your pet needs—right from trusted local caretakers.</p>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6 col-lg-3 pc-reveal">
+                    <div class="p-3 pc-card">
+                        <div class="pc-icon mb-3">🐕</div>
+                        <h5 class="fw-bold">Dog Walking</h5>
+                        <p class="text-muted mb-0">Daily walks with safe routes and real-time care.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 pc-reveal">
+                    <div class="p-3 pc-card">
+                        <div class="pc-icon mb-3">🏠</div>
+                        <h5 class="fw-bold">Pet Boarding</h5>
+                        <p class="text-muted mb-0">A cozy stay while you’re away—like a second home.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 pc-reveal">
+                    <div class="p-3 pc-card">
+                        <div class="pc-icon mb-3">✂️</div>
+                        <h5 class="fw-bold">Grooming</h5>
+                        <p class="text-muted mb-0">Clean, comfortable, and handled with care.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 pc-reveal">
+                    <div class="p-3 pc-card">
+                        <div class="pc-icon mb-3">🩺</div>
+                        <h5 class="fw-bold">Veterinary Help</h5>
+                        <p class="text-muted mb-0">Support when you need it—fast and reliable.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it works -->
+    <section id="about" class="pc-section" style="background: #eef7ff;">
+        <div class="container">
+            <div class="mb-4">
+                <h2 class="pc-section-title">How It Works</h2>
+                <p class="pc-section-subtitle">Book pet care in minutes—simple, safe, and transparent.</p>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4 pc-reveal">
+                    <div class="p-3 pc-card">
+                        <div class="pc-icon mb-3">🔎</div>
+                        <h5 class="fw-bold">Step 1: Search sitter</h5>
+                        <p class="text-muted mb-0">Choose city and pet type to find a sitter.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 pc-reveal">
+                    <div class="p-3 pc-card">
+                        <div class="pc-icon mb-3">📅</div>
+                        <h5 class="fw-bold">Step 2: Book service</h5>
+                        <p class="text-muted mb-0">Pick date & time and send a booking request.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 pc-reveal">
+                    <div class="p-3 pc-card">
+                        <div class="pc-icon mb-3">❤️</div>
+                        <h5 class="fw-bold">Step 3: Enjoy service</h5>
+                        <p class="text-muted mb-0">Relax—your pet is in loving hands.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="pc-section">
+        <div class="container">
+            <div class="mb-4">
+                <h2 class="pc-section-title">Testimonials</h2>
+                <p class="pc-section-subtitle">What pet parents say about Pet Sitter.</p>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4 pc-reveal">
+                    <div class="p-3 pc-card">
+                        <div class="fw-bold">“Super reliable!”</div>
+                        <div class="text-muted small mb-2">My dog loved the sitter and daily updates were great.</div>
+                        <div class="small">— Aditi, Delhi</div>
+                    </div>
+                </div>
+                <div class="col-md-4 pc-reveal">
+                    <div class="p-3 pc-card">
+                        <div class="fw-bold">“Easy booking.”</div>
+                        <div class="text-muted small mb-2">Found a caretaker in minutes and booked quickly.</div>
+                        <div class="small">— Rahul, Pune</div>
+                    </div>
+                </div>
+                <div class="col-md-4 pc-reveal">
+                    <div class="p-3 pc-card">
+                        <div class="fw-bold">“Caring service.”</div>
+                        <div class="text-muted small mb-2">Felt safe leaving my cat—highly recommended.</div>
+                        <div class="small">— Neha, Chandigarh</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="pc-footer">
+        <div class="container">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="fw-bold mb-2">Pet Sitter</div>
+                    <div class="small">Contact: support@petsitter.local</div>
+                    <div class="small">Phone: +91 90000 00000</div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="fw-bold mb-2">Social</div>
+                    <div class="small">
+                        <a href="#home">Instagram</a> · <a href="#home">Facebook</a> · <a href="#home">Twitter</a>
+                    </div>
+                </div>
+            </div>
+            <hr style="border-color: rgba(255,255,255,.15);">
+            <div class="small text-center">© <span id="pcYear"></span> Pet Sitter. All rights reserved.</div>
+        </div>
+    </footer>
+
+    <!-- Sign Up Modal -->
+    <div class="modal fade" id="signupModal" tabindex="-1" aria-labelledby="signupModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="signupModalLabel">SignUp</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- onsubmit="return false" prevents page reload on Enter key -->
+                    <form onsubmit="return false;">
+                        <div class="mb-2">
+                            <label class="col-form-label">Email Id: <span id="res">*</span></label>
+                            <input type="email" class="form-control" id="txtEmail">
+                        </div>
+                        <div class="mb-2">
+                            <label class="col-form-label">Password:</label>
+                            <div class="petcare-pwd-wrap">
+                                <input type="password" class="form-control" id="txtPwd" aria-describedby="signupPwdToggle">
+                                <button type="button" id="signupPwdToggle" class="petcare-pwd-toggle" aria-label="Show password" title="Show password">
+                                    👁
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="col-form-label">User Type:</label>
+                            <select class="form-select" id="signup-combo">
+                                <option value="Select" selected>Select</option>
+                                <option value="user">User</option>
+                                <option value="caretaker">Care Taker</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-outline-success" id="signup-btn">Sign Up</button>
+                    <span id="res-signup-btn"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="loginModalLabel">Login</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form onsubmit="return false;">
+                        <div class="mt-2" id="alerts"></div>
+                        <div class="mb-2">
+                            <label class="col-form-label">Email Id:</label>
+                            <input type="email" class="form-control" id="txtEmail2">
+                        </div>
+                        <div class="mb-2">
+                            <label class="col-form-label">Password:</label>
+                            <div class="petcare-pwd-wrap">
+                                <input type="password" class="form-control" id="txtPwd2" aria-describedby="loginPwdToggle">
+                                <button type="button" id="loginPwdToggle" class="petcare-pwd-toggle" aria-label="Show password" title="Show password">
+                                    👁
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-outline-success" id="login-btn">Login</button>
+                    <span id="res-login-btn"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+        crossorigin="anonymous"></script>
+
+    <script>
+        (function () {
+            function wireToggle(inputId, toggleId) {
+                var input = document.getElementById(inputId);
+                var btn = document.getElementById(toggleId);
+                if (!input || !btn) return;
+                btn.addEventListener("click", function () {
+                    var nextType = input.type === "password" ? "text" : "password";
+                    input.type = nextType;
+                    var showing = nextType === "text";
+                    btn.setAttribute("aria-label", showing ? "Hide password" : "Show password");
+                    btn.setAttribute("title", showing ? "Hide password" : "Show password");
+                });
+            }
+            wireToggle("txtPwd", "signupPwdToggle");
+            wireToggle("txtPwd2", "loginPwdToggle");
+
+            // Footer year
+            var y = document.getElementById("pcYear");
+            if (y) y.textContent = new Date().getFullYear();
+
+            // Reveal animation on scroll
+            var els = Array.prototype.slice.call(document.querySelectorAll(".pc-reveal"));
+            if ("IntersectionObserver" in window) {
+                var io = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (en) {
+                        if (en.isIntersecting) en.target.classList.add("is-visible");
+                    });
+                }, { threshold: 0.12 });
+                els.forEach(function (el) { io.observe(el); });
+            } else {
+                els.forEach(function (el) { el.classList.add("is-visible"); });
+            }
+        })();
+    </script>
+</body>
+
+</html>
