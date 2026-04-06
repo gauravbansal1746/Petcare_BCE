@@ -5,10 +5,9 @@ var logger = require("./config/logger");
 
 require("./config/db");
 
-var port = parseInt(process.env.PORT, 10);
-if (isNaN(port) || port < 1) port = 3000;
+var port = process.env.PORT || 3000;
 
-var server = app.listen(port, function () {
+var server = app.listen(port, '0.0.0.0', function () {
     logger.info("Server started on port " + port, { meta: { port: port, env: process.env.NODE_ENV || "development" } });
 });
 
