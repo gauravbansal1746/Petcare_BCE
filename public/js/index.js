@@ -1,4 +1,6 @@
 // addAlert — shows a dismissible Bootstrap danger alert in the login modal
+var API_BASE = window.REACT_APP_API_URL || "https://petcarebce-production.up.railway.app";
+
 function addAlert(message) {
     $("#alerts").append(
         '<div class="alert alert-danger alert-dismissible fade show" role="alert">' + message +
@@ -16,7 +18,7 @@ $(document).ready(function () {
 
         $.ajax({
             type: "get",
-            url:  "/api/v1/auth/check-email",
+            url:  API_BASE + "/api/v1/auth/check-email",
             data: { emailForServer: custEmail }
         }).done(function (resp) {
             $("#res").html(resp.available
@@ -41,7 +43,7 @@ $(document).ready(function () {
 
         $.ajax({
             type:        "post",
-            url:         "/api/v1/auth/signup",
+            url:         API_BASE + "/api/v1/auth/signup",
             contentType: "application/json",
             data:        JSON.stringify({ emailForServer: x, pwdForServer: y, typeForServer: z })
         }).done(function (resp) {
@@ -64,7 +66,7 @@ $(document).ready(function () {
 
         $.ajax({
             type:        "post",
-            url:         "/api/v1/auth/login",
+            url:         API_BASE + "/api/v1/auth/login",
             contentType: "application/json",
             data:        JSON.stringify({ emailForServer: x, pwdForServer: y })
         }).done(function (resp) {

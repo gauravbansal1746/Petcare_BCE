@@ -25,6 +25,7 @@
 
     <script>
         (function () {
+            var API_BASE = window.REACT_APP_API_URL || "https://petcarebce-production.up.railway.app";
             var params = new URLSearchParams(window.location.search);
             var bookingId = params.get("bookingId");
             var idEl = document.getElementById("booking-id");
@@ -47,7 +48,7 @@
                 var token = localStorage.getItem("token");
                 btn.disabled = true;
                 btn.textContent = "Processing...";
-                fetch("/api/v1/payment/" + encodeURIComponent(bookingId), {
+                fetch(API_BASE + "/api/v1/payment/" + encodeURIComponent(bookingId), {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",

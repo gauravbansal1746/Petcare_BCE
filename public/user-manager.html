@@ -25,10 +25,11 @@
         }
 
         angular.module("myModule").controller("myController", function ($scope, $http) {
+            var API_BASE = window.REACT_APP_API_URL || "https://petcarebce-production.up.railway.app";
             $scope.jsonUsersAry = [];
 
             $scope.fetchAndShow = function () {
-                $http.get("/api/v1/admin/users?page=1&limit=100").then(fxOk, fxNotOk);
+                $http.get(API_BASE + "/api/v1/admin/users?page=1&limit=100").then(fxOk, fxNotOk);
 
                 function fxOk(response) {
                     $scope.jsonUsersAry = (response.data && response.data.data) ? response.data.data : [];
@@ -39,7 +40,7 @@
             };
 
             $scope.blockUser = function (emailid) {
-                $http.get("/api/v1/admin/users/block?xEmail=" + encodeURIComponent(emailid)).then(fxOk, fxNotOk);
+                $http.get(API_BASE + "/api/v1/admin/users/block?xEmail=" + encodeURIComponent(emailid)).then(fxOk, fxNotOk);
 
                 function fxOk(response) {
                     alert((response.data && response.data.message) ? response.data.message : "OK");
@@ -51,7 +52,7 @@
             };
 
             $scope.resumeUser = function (emailid) {
-                $http.get("/api/v1/admin/users/resume?xEmail=" + encodeURIComponent(emailid)).then(fxOk, fxNotOk);
+                $http.get(API_BASE + "/api/v1/admin/users/resume?xEmail=" + encodeURIComponent(emailid)).then(fxOk, fxNotOk);
 
                 function fxOk(response) {
                     alert((response.data && response.data.message) ? response.data.message : "OK");

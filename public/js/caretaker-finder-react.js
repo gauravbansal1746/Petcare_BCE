@@ -6,6 +6,7 @@
     var useState = React.useState;
     var useMemo = React.useMemo;
     var e = React.createElement;
+    var API_BASE = window.REACT_APP_API_URL || "https://petcarebce-production.up.railway.app";
 
     function CaretakerFinderApp() {
         var stateOrder = window.PETCARE_INDIA_STATE_ORDER;
@@ -85,7 +86,7 @@
             setResults([]);
 
             var url =
-                "/api/v1/caretakers?cityforserver=" +
+                API_BASE + "/api/v1/caretakers?cityforserver=" +
                 encodeURIComponent(city) +
                 "&petforserver=" +
                 encodeURIComponent(pet);
@@ -147,7 +148,7 @@
             var bookingTime = window.prompt("Enter booking time (HH:MM, 24h):", "10:00");
             if (!bookingTime) return;
 
-            fetch("/api/v1/bookings", {
+            fetch(API_BASE + "/api/v1/bookings", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

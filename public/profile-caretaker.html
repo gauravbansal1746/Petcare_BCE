@@ -38,6 +38,8 @@
             return (body && body.message) ? body.message : fallback;
         }
 
+        var API_BASE = window.REACT_APP_API_URL || "https://petcarebce-production.up.railway.app";
+
         $(document).ready(function () {
             initCaretakerStateCitySelects("sts", "caretkrCity");
             if (typeof petcareInitPincodeAutofill === "function") {
@@ -60,7 +62,7 @@
                 console.log("[profile-caretaker] search clicked for", custEmail);
                 $.ajax({
                     type: "get",
-                    url: "/api/v1/caretakers/profile",
+                    url: API_BASE + "/api/v1/caretakers/profile",
                     data: { emailforServer: custEmail },
                     headers: petcareAuthHeader(),
                     dataType: "json"
@@ -108,7 +110,7 @@
 
                 var formData = new FormData($("form")[0]);
                 $.ajax({
-                    url: "/api/v1/caretakers/profile",
+                    url: API_BASE + "/api/v1/caretakers/profile",
                     type: method,
                     data: formData,
                     processData: false,
