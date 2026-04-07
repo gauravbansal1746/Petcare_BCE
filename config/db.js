@@ -57,36 +57,29 @@ function applySchemaFixes() {
     });
 
     // Ensure a default admin exists (requested: hardcoded credentials).
-    // This does NOT bypass DB auth; it inserts the admin user if missing.
+    // Also refresh password hash so changed default credentials take effect.
     var ADMIN_EMAIL = "admin@gmail.com";
-    var ADMIN_PLAIN = "admin123";
-    pool.query("SELECT emailid FROM users WHERE emailid=?", [ADMIN_EMAIL], function (e, rows) {
-        if (e) {
-            logger.warn("Default admin check failed", { meta: { error: e.message } });
+    var ADMIN_PLAIN = "Admin@123";
+    bcrypt.hash(ADMIN_PLAIN, 10, function (hashErr, hash) {
+        if (hashErr) {
+            logger.warn("Default admin hash failed", { meta: { error: hashErr.message } });
             return;
         }
-        if (rows && rows.length > 0) return; // already exists; do not overwrite password
-
-        bcrypt.hash(ADMIN_PLAIN, 10, function (hashErr, hash) {
-            if (hashErr) {
-                logger.warn("Default admin hash failed", { meta: { error: hashErr.message } });
-                return;
-            }
-            pool.query(
-                "INSERT INTO users (emailid, pwd, utype, status) VALUES (?,?, 'admin', 1)",
-                [ADMIN_EMAIL, hash],
-                function (insErr) {
-                    if (insErr) {
-                        logger.warn("Default admin insert failed", { meta: { error: insErr.message } });
-                        return;
-                    }
-                    logger.info("Default admin created", { meta: { email: ADMIN_EMAIL } });
-                    if (process.env.NODE_ENV !== "production") {
-                        console.log("[petcare] Default admin ready:", ADMIN_EMAIL, "/", ADMIN_PLAIN);
-                    }
+        pool.query(
+            "INSERT INTO users (emailid, pwd, utype, status) VALUES (?,?, 'admin', 1) " +
+            "ON DUPLICATE KEY UPDATE pwd = VALUES(pwd), utype = 'admin', status = 1",
+            [ADMIN_EMAIL, hash],
+            function (insErr) {
+                if (insErr) {
+                    logger.warn("Default admin upsert failed", { meta: { error: insErr.message } });
+                    return;
                 }
-            );
-        });
+                logger.info("Default admin ready", { meta: { email: ADMIN_EMAIL } });
+                if (process.env.NODE_ENV !== "production") {
+                    console.log("[petcare] Default admin ready:", ADMIN_EMAIL, "/", ADMIN_PLAIN);
+                }
+            }
+        );
     });
 
     // Legacy schemas had INT columns for contact/pic fields.

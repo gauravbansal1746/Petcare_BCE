@@ -5,7 +5,7 @@
  *   node scripts/ensure-admin.js
  *
  * Optional env overrides (same MYSQL_* as config/db.js):
- *   ADMIN_EMAIL, ADMIN_PASSWORD — defaults admin@gmail.com / admin123
+ *   ADMIN_EMAIL, ADMIN_PASSWORD — defaults admin@gmail.com / Admin@123
  */
 require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") });
 
@@ -13,10 +13,10 @@ var bcrypt = require("bcryptjs");
 var mysql  = require("mysql");
 
 var ADMIN_EMAIL    = process.env.ADMIN_EMAIL || "admin@gmail.com";
-var ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+var ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin@123";
 
-if (ADMIN_PASSWORD.length < 6) {
-    console.error("ADMIN_PASSWORD must be at least 6 characters.");
+if (ADMIN_PASSWORD.length < 8) {
+    console.error("ADMIN_PASSWORD must be at least 8 characters.");
     process.exit(1);
 }
 
@@ -45,7 +45,7 @@ pool.query("ALTER TABLE users MODIFY COLUMN pwd VARCHAR(255) NOT NULL", function
                 console.error(e.message);
                 process.exit(1);
             }
-            console.log("Admin ready:", ADMIN_EMAIL, "(password from ADMIN_PASSWORD or default admin123)");
+            console.log("Admin ready:", ADMIN_EMAIL, "(password from ADMIN_PASSWORD or default Admin@123)");
             console.log("Log in at the home page; you will be redirected to /dash-admin.");
             pool.end();
         });
