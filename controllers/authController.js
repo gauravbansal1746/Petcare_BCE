@@ -51,11 +51,7 @@ exports.login = function (req, res, next) {
         if (Number(user.status) !== 1)
             return next(new AppError("Your account is blocked.", 403));
 
-        bcrypt.compare(password, user.pwd, function (err, isMatch) {
-            if (err) return next(err);
-            if (!isMatch)
-                return next(new AppError("Invalid email or password.", 401));
-
+        function issueTokenAndRespond() {
             if (!process.env.JWT_SECRET)
                 return next(new AppError("Server misconfiguration: JWT secret is not set.", 500));
 
@@ -66,6 +62,31 @@ exports.login = function (req, res, next) {
             );
 
             res.status(200).json({ status: "success", token: token, role: user.utype });
+        }
+
+        var pwdInDb = user.pwd == null ? "" : String(user.pwd);
+        var isBcryptHash = /^\$2[aby]\$\d{2}\$/.test(pwdInDb);
+
+        if (isBcryptHash) {
+            bcrypt.compare(password, pwdInDb, function (err, isMatch) {
+                if (err) return next(err);
+                if (!isMatch)
+                    return next(new AppError("Invalid email or password.", 401));
+                issueTokenAndRespond();
+            });
+            return;
+        }
+
+        // Legacy/plaintext password fallback for old rows; auto-upgrade to bcrypt on success.
+        if (password !== pwdInDb)
+            return next(new AppError("Invalid email or password.", 401));
+
+        bcrypt.hash(password, 10, function (hashErr, hashedPwd) {
+            if (hashErr) return next(hashErr);
+            dbRef.query("UPDATE users SET pwd=? WHERE emailid=?", [hashedPwd, user.emailid], function (upErr) {
+                if (upErr) return next(upErr);
+                issueTokenAndRespond();
+            });
         });
     });
 };
