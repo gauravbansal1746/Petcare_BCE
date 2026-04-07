@@ -3,8 +3,22 @@ var AppError               = require("../utils/AppError");
 var resolveClientColumns   = require("../utils/clientDbColumns").resolveClientColumns;
 var cloudinaryUpload       = require("../utils/cloudinary").uploadFile;
 var cloudinaryEnabled      = require("../utils/cloudinary").isEnabled;
+var validators             = require("../utils/validators");
+
+function ensureClientPayload(req, next) {
+    var b = req.body || {};
+    if (!b.clientName || !b.clientAddress || !b.clientCity || !b.clientState || !b.clientPets)
+        return next(new AppError(validators.REQUIRED_MESSAGE, 400)) || true;
+    if (!validators.validatePhone(b.clientContact))
+        return next(new AppError(validators.PHONE_MESSAGE, 400)) || true;
+    if (!validators.validatePin(b.clientPin))
+        return next(new AppError(validators.PIN_MESSAGE, 400)) || true;
+    return false;
+}
 
 exports.createProfile = function (req, res, next) {
+    var validationError = ensureClientPayload(req, next);
+    if (validationError) return;
     var pic1 = "nopic.png";
     var pic2 = "nopic.png";
     var pending = 0;
@@ -70,6 +84,8 @@ exports.createProfile = function (req, res, next) {
 };
 
 exports.updateProfile = function (req, res, next) {
+    var validationError = ensureClientPayload(req, next);
+    if (validationError) return;
     var ppic = req.body["hdn-1"] || "nopic.png";
     var idpic = req.body["hdn-2"] || "nopic.png";
     var pending = 0;

@@ -2,11 +2,16 @@ var dbRef    = require("../config/db");
 var bcrypt   = require("bcryptjs");
 var jwt      = require("jsonwebtoken");
 var AppError = require("../utils/AppError");
+var validators = require("../utils/validators");
 
 exports.signup = function (req, res, next) {
     var email    = req.body.emailForServer;
     var password = req.body.pwdForServer;
     var utype    = req.body.typeForServer;
+    if (!validators.validateEmail(email))
+        return next(new AppError(validators.EMAIL_MESSAGE, 400));
+    if (!validators.validatePassword(password))
+        return next(new AppError(validators.PASSWORD_MESSAGE, 400));
 
     dbRef.query("select emailid from users where emailid=?", [email], function (err, rows) {
         if (err) return next(err);
@@ -31,6 +36,10 @@ exports.signup = function (req, res, next) {
 exports.login = function (req, res, next) {
     var email    = req.body.emailForServer;
     var password = req.body.pwdForServer;
+    if (!validators.validateEmail(email))
+        return next(new AppError(validators.EMAIL_MESSAGE, 400));
+    if (!validators.validatePassword(password))
+        return next(new AppError(validators.PASSWORD_MESSAGE, 400));
 
     dbRef.query("select * from users where emailid=?", [email], function (err, rows) {
         if (err) return next(err);

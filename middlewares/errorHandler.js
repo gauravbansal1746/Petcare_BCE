@@ -15,8 +15,10 @@ module.exports = function errorHandler(err, req, res, next) {
             }
         });
         return res.status(400).json({
+            success: false,
             status:  "fail",
-            message: "Validation failed.",
+            message: err.details[0] ? err.details[0].message.replace(/['"]/g, "") : "Validation failed.",
+            field: err.details[0] && err.details[0].path ? err.details[0].path.join(".") : undefined,
             errors:  err.details.map(function (d) {
                 return { field: d.path.join("."), message: d.message.replace(/['"]/g, "") };
             })
@@ -29,6 +31,7 @@ module.exports = function errorHandler(err, req, res, next) {
             meta: { url: req.originalUrl, method: req.method, error: err.message }
         });
         return res.status(400).json({
+            success: false,
             status:  "fail",
             message: "A value is too long for the database. If this is signup, ensure users.pwd is VARCHAR(255) or longer."
         });
@@ -40,6 +43,7 @@ module.exports = function errorHandler(err, req, res, next) {
             meta: { url: req.originalUrl, method: req.method, error: err.message }
         });
         return res.status(500).json({
+            success: false,
             status:  "error",
             message:
                 "Database schema does not match the application. Check table columns against the README caretakers definition. Detail: " +
@@ -53,6 +57,7 @@ module.exports = function errorHandler(err, req, res, next) {
             meta: { url: req.originalUrl, method: req.method, error: err.message }
         });
         return res.status(409).json({
+            success: false,
             status:  "fail",
             message: "A record with that value already exists."
         });
@@ -64,6 +69,7 @@ module.exports = function errorHandler(err, req, res, next) {
             meta: { url: req.originalUrl, method: req.method, statusCode: statusCode }
         });
         return res.status(statusCode).json({
+            success: false,
             status:  status,
             message: err.message
         });
@@ -80,6 +86,7 @@ module.exports = function errorHandler(err, req, res, next) {
     });
     // Never expose stack traces or internal error details to the client
     return res.status(500).json({
+        success: false,
         status:  "error",
         message: "Something went wrong. Please try again later."
     });

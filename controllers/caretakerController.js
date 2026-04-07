@@ -3,8 +3,21 @@ var AppError                = require("../utils/AppError");
 var resolveCaretakerColumns = require("../utils/caretakerDbColumns").resolveCaretakerColumns;
 var cloudinaryUpload        = require("../utils/cloudinary").uploadFile;
 var cloudinaryEnabled       = require("../utils/cloudinary").isEnabled;
+var validators              = require("../utils/validators");
+
+function ensureCaretakerPayload(req, next) {
+    var b = req.body || {};
+    if (!b.caretkrName || !b.caretkrAddress || !b.stt || !b.city || !b.selPets)
+        return next(new AppError(validators.REQUIRED_MESSAGE, 400)) || true;
+    if (!validators.validatePhone(b.caretkrContact))
+        return next(new AppError(validators.PHONE_MESSAGE, 400)) || true;
+    if (!validators.validatePin(b.caretkrPin))
+        return next(new AppError(validators.PIN_MESSAGE, 400)) || true;
+    return false;
+}
 
 exports.createProfile = function (req, res, next) {
+    if (ensureCaretakerPayload(req, next)) return;
     var pic = "nopic.png";
     var aborted = false;
 
@@ -57,6 +70,7 @@ exports.createProfile = function (req, res, next) {
 };
 
 exports.updateProfile = function (req, res, next) {
+    if (ensureCaretakerPayload(req, next)) return;
     var picName = req.body.hdn || "nopic.png";
 
     if (process.env.NODE_ENV !== "production") {

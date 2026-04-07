@@ -13,6 +13,7 @@
     <script src="js/dash-client.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
     <script src="js/petcare-logout.js"></script>
+    <script src="js/petcare-back.js"></script>
     <script src="js/petcare-require-login.js"></script>
 </head>
 
@@ -24,7 +25,10 @@
                     Client Control Panel
                 </span>
             </a>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="petcareLogout();">Log out</button>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="petcareGoBack();">Back</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="petcareLogout();">Log out</button>
+            </div>
         </div>
     </nav>
 

@@ -1,4 +1,5 @@
 var Joi = require("joi");
+var validators = require("./validators");
 
 var ROLES    = ["user", "caretaker", "admin"];
 var STATUSES = ["pending", "confirmed", "cancelled", "completed"];
@@ -6,27 +7,36 @@ var STATUSES = ["pending", "confirmed", "cancelled", "completed"];
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
 exports.signup = Joi.object({
-    emailForServer: Joi.string().email().required().messages({
-        "string.email": "emailForServer must be a valid email address.",
-        "any.required": "emailForServer is required."
+    emailForServer: Joi.string().required().custom(function (value, helpers) {
+        return validators.validateEmail(value) ? value : helpers.error("any.invalid");
+    }).messages({
+        "any.invalid": validators.EMAIL_MESSAGE,
+        "any.required": validators.REQUIRED_MESSAGE
     }),
-    pwdForServer: Joi.string().min(6).required().messages({
-        "string.min":   "pwdForServer must be at least 6 characters.",
-        "any.required": "pwdForServer is required."
+    pwdForServer: Joi.string().required().custom(function (value, helpers) {
+        return validators.validatePassword(value) ? value : helpers.error("any.invalid");
+    }).messages({
+        "any.invalid": validators.PASSWORD_MESSAGE,
+        "any.required": validators.REQUIRED_MESSAGE
     }),
     typeForServer: Joi.string().valid(...ROLES).required().messages({
         "any.only":     "typeForServer must be one of: " + ROLES.join(", "),
-        "any.required": "typeForServer is required."
+        "any.required": validators.REQUIRED_MESSAGE
     })
 });
 
 exports.login = Joi.object({
-    emailForServer: Joi.string().email().required().messages({
-        "string.email": "emailForServer must be a valid email address.",
-        "any.required": "emailForServer is required."
+    emailForServer: Joi.string().required().custom(function (value, helpers) {
+        return validators.validateEmail(value) ? value : helpers.error("any.invalid");
+    }).messages({
+        "any.invalid": validators.EMAIL_MESSAGE,
+        "any.required": validators.REQUIRED_MESSAGE
     }),
-    pwdForServer: Joi.string().required().messages({
-        "any.required": "pwdForServer is required."
+    pwdForServer: Joi.string().required().custom(function (value, helpers) {
+        return validators.validatePassword(value) ? value : helpers.error("any.invalid");
+    }).messages({
+        "any.invalid": validators.PASSWORD_MESSAGE,
+        "any.required": validators.REQUIRED_MESSAGE
     })
 });
 
@@ -92,38 +102,90 @@ exports.processPayment = Joi.object({
 // ── Client Profile ────────────────────────────────────────────────────────────
 
 exports.clientProfile = Joi.object({
-    clientEmail:   Joi.string().email().required(),
-    clientName:    Joi.string().min(2).max(100).required(),
-    clientContact: Joi.string().pattern(/^\d{10}$/).required().messages({
-        "string.pattern.base": "clientContact must be a 10-digit number."
+    clientEmail:   Joi.string().required().custom(function (value, helpers) {
+        return validators.validateEmail(value) ? value : helpers.error("any.invalid");
+    }).messages({
+        "any.invalid": validators.EMAIL_MESSAGE,
+        "any.required": validators.REQUIRED_MESSAGE
     }),
-    clientAddress: Joi.string().min(5).required(),
-    clientCity:    Joi.string().required(),
-    clientState:   Joi.string().required(),
-    clientPin:     Joi.string().pattern(/^\d{6}$/).required().messages({
-        "string.pattern.base": "clientPin must be a 6-digit number."
+    clientName:    Joi.string().min(2).max(100).required().messages({
+        "any.required": validators.REQUIRED_MESSAGE,
+        "string.empty": validators.REQUIRED_MESSAGE
     }),
-    clientPets:    Joi.string().allow("", null)
+    clientContact: Joi.string().required().custom(function (value, helpers) {
+        return validators.validatePhone(value) ? value : helpers.error("any.invalid");
+    }).messages({
+        "any.invalid": validators.PHONE_MESSAGE,
+        "any.required": validators.REQUIRED_MESSAGE
+    }),
+    clientAddress: Joi.string().min(5).required().messages({
+        "any.required": validators.REQUIRED_MESSAGE,
+        "string.empty": validators.REQUIRED_MESSAGE
+    }),
+    clientCity:    Joi.string().required().messages({
+        "any.required": validators.REQUIRED_MESSAGE,
+        "string.empty": validators.REQUIRED_MESSAGE
+    }),
+    clientState:   Joi.string().required().messages({
+        "any.required": validators.REQUIRED_MESSAGE,
+        "string.empty": validators.REQUIRED_MESSAGE
+    }),
+    clientPin:     Joi.string().required().custom(function (value, helpers) {
+        return validators.validatePin(value) ? value : helpers.error("any.invalid");
+    }).messages({
+        "any.invalid": validators.PIN_MESSAGE,
+        "any.required": validators.REQUIRED_MESSAGE
+    }),
+    clientPets:    Joi.string().required().messages({
+        "any.required": validators.REQUIRED_MESSAGE,
+        "string.empty": validators.REQUIRED_MESSAGE
+    })
 }).options({ allowUnknown: true }); // allow file fields to pass through
 
 // ── Caretaker Profile ─────────────────────────────────────────────────────────
 
 exports.caretakerProfile = Joi.object({
-    caretkrEmail:   Joi.string().email().required(),
-    caretkrName:    Joi.string().min(2).max(100).required(),
-    caretkrContact: Joi.string().pattern(/^\d{10}$/).required().messages({
-        "string.pattern.base": "caretkrContact must be a 10-digit number."
+    caretkrEmail:   Joi.string().required().custom(function (value, helpers) {
+        return validators.validateEmail(value) ? value : helpers.error("any.invalid");
+    }).messages({
+        "any.invalid": validators.EMAIL_MESSAGE,
+        "any.required": validators.REQUIRED_MESSAGE
     }),
-    caretkrAddress: Joi.string().min(5).required(),
+    caretkrName:    Joi.string().min(2).max(100).required().messages({
+        "any.required": validators.REQUIRED_MESSAGE,
+        "string.empty": validators.REQUIRED_MESSAGE
+    }),
+    caretkrContact: Joi.string().required().custom(function (value, helpers) {
+        return validators.validatePhone(value) ? value : helpers.error("any.invalid");
+    }).messages({
+        "any.invalid": validators.PHONE_MESSAGE,
+        "any.required": validators.REQUIRED_MESSAGE
+    }),
+    caretkrAddress: Joi.string().min(5).required().messages({
+        "any.required": validators.REQUIRED_MESSAGE,
+        "string.empty": validators.REQUIRED_MESSAGE
+    }),
     caretkrWebsite: Joi.string().uri().allow("", null).messages({
         "string.uri": "caretkrWebsite must be a valid URL."
     }),
-    stt:            Joi.string().required(),
-    city:           Joi.string().required(),
-    caretkrPin:     Joi.string().pattern(/^\d{6}$/).required().messages({
-        "string.pattern.base": "caretkrPin must be a 6-digit number."
+    stt:            Joi.string().required().messages({
+        "any.required": validators.REQUIRED_MESSAGE,
+        "string.empty": validators.REQUIRED_MESSAGE
     }),
-    selPets:        Joi.string().allow("", null)
+    city:           Joi.string().required().messages({
+        "any.required": validators.REQUIRED_MESSAGE,
+        "string.empty": validators.REQUIRED_MESSAGE
+    }),
+    caretkrPin:     Joi.string().required().custom(function (value, helpers) {
+        return validators.validatePin(value) ? value : helpers.error("any.invalid");
+    }).messages({
+        "any.invalid": validators.PIN_MESSAGE,
+        "any.required": validators.REQUIRED_MESSAGE
+    }),
+    selPets:        Joi.string().required().messages({
+        "any.required": validators.REQUIRED_MESSAGE,
+        "string.empty": validators.REQUIRED_MESSAGE
+    })
 }).options({ allowUnknown: true });
 
 // ── Pagination (query string) ─────────────────────────────────────────────────

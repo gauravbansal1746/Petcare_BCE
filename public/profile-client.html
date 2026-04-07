@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="css/profile-client.css">
     <script src="js/profile-client.js"></script>
     <script src="js/petcare-logout.js"></script>
+    <script src="js/petcare-back.js"></script>
     <script src="js/petcare-require-login.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
     <script src="js/india-state-cities-data.js"></script>
@@ -46,6 +47,37 @@
                 return "Network/CORS error: request blocked or server unreachable.";
             }
             return (body && body.message) ? body.message : fallback;
+        }
+        function setFieldError(id, message) {
+            var $el = $("#" + id);
+            $el.toggleClass("is-invalid", !!message);
+            var errId = id + "-error";
+            var $err = $("#" + errId);
+            if ($err.length === 0) {
+                $el.after('<div id="' + errId + '" class="text-danger small mt-1"></div>');
+                $err = $("#" + errId);
+            }
+            $err.text(message || "");
+        }
+        function validateClientForm() {
+            var ok = true;
+            var mobile = ($("#clientContact").val() || "").trim();
+            var pin = ($("#clientPin").val() || "").trim();
+            var required = ["clientEmail", "clientName", "clientAddress", "clientCity", "clientState", "clientPets"];
+            required.forEach(function (id) {
+                var msg = ($("#" + id).val() || "").trim() ? "" : "All required fields must be filled";
+                setFieldError(id, msg);
+                if (msg) ok = false;
+            });
+            if (!/^\d{10}$/.test(mobile)) {
+                setFieldError("clientContact", "Mobile number must be exactly 10 digits");
+                ok = false;
+            } else setFieldError("clientContact", "");
+            if (!/^\d{6}$/.test(pin)) {
+                setFieldError("clientPin", "PIN code must be exactly 6 digits");
+                ok = false;
+            } else setFieldError("clientPin", "");
+            return ok;
         }
 
         var API_BASE = window.REACT_APP_API_URL || "https://petcarebce-production.up.railway.app";
@@ -132,6 +164,7 @@
                 // Auto-normalize strict-validated fields before sending
                 var contactDigits = ($("#clientContact").val() || "").replace(/\D/g, "").slice(0, 10);
                 $("#clientContact").val(contactDigits);
+                if (!validateClientForm()) return;
 
                 var emailNow = (localStorage.getItem("email") || $("#clientEmail").val() || "").trim();
                 if (emailNow) $("#clientEmail").val(emailNow);
@@ -157,33 +190,25 @@
 
                 function sendWith(httpMethod, onSuccess, onError) {
                     console.log("REQUEST DATA:", data);
-                    fetch(API_BASE + "/api/v1/clients/profile", {
-                        method: httpMethod,
+                    var formData = new FormData($("form")[0]);
+                    $.ajax({
+                        url: API_BASE + "/api/v1/clients/profile",
+                        type: httpMethod,
+                        data: formData,
+                        processData: false,
+                        contentType: false,
                         headers: {
-                            "Content-Type": "application/json",
                             Authorization: "Bearer " + token
                         },
-                        body: JSON.stringify(data)
-                    })
-                        .then(function (response) {
-                            return response.json().then(function (body) {
-                                return { response: response, body: body };
-                            });
-                        })
-                        .then(function (out) {
-                            console.log("RESPONSE:", out.body);
-                            if (!out.response.ok) {
-                                var err = new Error((out.body && out.body.message) || "Request failed.");
-                                err.payload = out.body;
-                                err.status = out.response.status;
-                                throw err;
-                            }
-                            onSuccess(out.body);
-                        })
-                        .catch(function (error) {
-                            console.error("ERROR:", (error && error.payload) || error.message);
-                            onError(error);
-                        });
+                        dataType: "json"
+                    }).done(function (body) {
+                        console.log("RESPONSE:", body);
+                        onSuccess(body);
+                    }).fail(function (xhr) {
+                        var payload = xhr.responseJSON || { message: extractApiError(xhr, "Request failed.") };
+                        console.error("ERROR:", payload || xhr.statusText);
+                        onError({ payload: payload, status: xhr.status, message: payload.message });
+                    });
                 }
 
                 sendWith(method, function (body) {
@@ -225,12 +250,14 @@
 <body>
 
     <nav class="navbar">
-        <div class="container-fluid container justify-content-center">
+        <div class="container-fluid container justify-content-between align-items-center">
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="petcareGoBack();">Back</button>
             <a class="navbar-brand" href="#">
                 <span id="title-text">
                     Client Profile
                 </span>
             </a>
+            <span></span>
         </div>
     </nav>
 

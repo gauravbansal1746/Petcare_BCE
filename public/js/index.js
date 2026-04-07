@@ -1,5 +1,39 @@
 // addAlert — shows a dismissible Bootstrap danger alert in the login modal
 var API_BASE = window.REACT_APP_API_URL || "https://petcarebce-production.up.railway.app";
+var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+var PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+
+function setFieldError(selector, message) {
+    var $el = $(selector);
+    $el.toggleClass("is-invalid", !!message);
+    var id = selector.replace("#", "") + "-error";
+    var $err = $("#" + id);
+    if ($err.length === 0) {
+        $el.after('<div id="' + id + '" class="text-danger small mt-1"></div>');
+        $err = $("#" + id);
+    }
+    $err.text(message || "");
+}
+
+function validateEmailField(selector) {
+    var v = ($(selector).val() || "").trim();
+    if (!EMAIL_RE.test(v)) {
+        setFieldError(selector, "Please enter a valid email (e.g., example@gmail.com)");
+        return false;
+    }
+    setFieldError(selector, "");
+    return true;
+}
+
+function validatePasswordField(selector) {
+    var v = $(selector).val() || "";
+    if (!PASSWORD_RE.test(v)) {
+        setFieldError(selector, "Password must be at least 8 characters and include uppercase, lowercase, number, and special character");
+        return false;
+    }
+    setFieldError(selector, "");
+    return true;
+}
 
 function addAlert(message) {
     $("#alerts").append(
@@ -15,6 +49,7 @@ $(document).ready(function () {
     $("#txtEmail").blur(function () {
         var custEmail = $("#txtEmail").val();
         if (!custEmail) return;
+        if (!validateEmailField("#txtEmail")) return;
 
         $.ajax({
             type: "get",
@@ -40,6 +75,10 @@ $(document).ready(function () {
             $("#res-signup-btn").html("<span style='color:red'>Please fill all fields.</span>");
             return;
         }
+        var okEmail = validateEmailField("#txtEmail");
+        var okPwd = validatePasswordField("#txtPwd");
+        setFieldError("#signup-combo", z === "Select" ? "All required fields must be filled" : "");
+        if (!okEmail || !okPwd || z === "Select") return;
 
         $.ajax({
             type:        "post",
@@ -63,6 +102,9 @@ $(document).ready(function () {
             addAlert("Please enter email and password.");
             return;
         }
+        var okEmail = validateEmailField("#txtEmail2");
+        var okPwd = validatePasswordField("#txtPwd2");
+        if (!okEmail || !okPwd) return;
 
         $.ajax({
             type:        "post",
