@@ -8,6 +8,11 @@ var schemas           = require("../utils/schemas");
 var ROLES             = require("../config/roles");
 
 router.get(
+    "/get-key",
+    paymentController.getPublicKey
+);
+
+router.get(
     "/public-key",
     verifyToken,
     authorizeRoles(ROLES.USER),

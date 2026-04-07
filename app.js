@@ -59,6 +59,7 @@ app.use("/api/v1/admin",      security.apiLimiter,    require("./routes/admin"))
 app.use("/api/v1/bookings",   security.apiLimiter,    require("./routes/booking"));
 app.use("/api/v1/payments",   security.apiLimiter,    require("./routes/payment"));
 app.use("/api/v1/payment",    security.apiLimiter,    require("./routes/payment"));
+app.use("/api/payment",       security.apiLimiter,    require("./routes/payment"));
 
 // ── Global error handler — must be last ──────────────────────────────────────
 app.use(require("./middlewares/errorHandler"));

@@ -5,19 +5,30 @@ var Razorpay = require("razorpay");
 var crypto   = require("crypto");
 var dbRef    = require("../config/db");
 
+function getRazorpayKeyId() {
+    return process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_TEST_KEY_ID || process.env.REACT_APP_RAZORPAY_KEY || "";
+}
+
+function getRazorpayKeySecret() {
+    return process.env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_TEST_KEY_SECRET || "";
+}
+
 function getRazorpayClient() {
-    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET)
+    var keyId = getRazorpayKeyId();
+    var keySecret = getRazorpayKeySecret();
+    if (!keyId || !keySecret)
         return null;
     return new Razorpay({
-        key_id: process.env.RAZORPAY_KEY_ID,
-        key_secret: process.env.RAZORPAY_KEY_SECRET
+        key_id: keyId,
+        key_secret: keySecret
     });
 }
 
 exports.getPublicKey = function (req, res, next) {
-    if (!process.env.RAZORPAY_KEY_ID)
+    var keyId = getRazorpayKeyId();
+    if (!keyId)
         return next(new AppError("Razorpay key id is missing.", 500));
-    res.json({ key: process.env.RAZORPAY_KEY_ID });
+    res.json({ key: keyId });
 };
 
 exports.createOrder = function (req, res, next) {
@@ -74,9 +85,11 @@ exports.verifyPayment = function (req, res, next) {
 
     if (!bookingId || !razorpayOrderId || !razorpayPaymentId || !razorpaySignature)
         return next(new AppError("Missing Razorpay verification fields.", 400));
+    if (!getRazorpayKeySecret())
+        return next(new AppError("Razorpay key secret is missing.", 500));
 
     var generatedSignature = crypto
-        .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+        .createHmac("sha256", getRazorpayKeySecret())
         .update(razorpayOrderId + "|" + razorpayPaymentId)
         .digest("hex");
 
