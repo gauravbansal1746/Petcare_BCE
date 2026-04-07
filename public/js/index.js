@@ -76,8 +76,8 @@ $(document).ready(function () {
             console.log("[login] session stored for", x, "role=", resp.role);
 
             if (resp.role === "admin")          window.location.href = "/dash-admin";
-            else if (resp.role === "caretaker") window.location.href = "/dcaretaker";
-            else                                window.location.href = "/dclient";
+            else if (resp.role === "caretaker") window.location.href = "/dash-caretaker";
+            else                                window.location.href = "/dash-client";
         }).fail(function (xhr) {
             var msg = xhr.responseJSON ? xhr.responseJSON.message : "Invalid Email or Password.";
             addAlert(msg);
