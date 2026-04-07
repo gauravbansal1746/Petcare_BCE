@@ -135,22 +135,39 @@
 
                 var emailNow = (localStorage.getItem("email") || $("#clientEmail").val() || "").trim();
                 if (emailNow) $("#clientEmail").val(emailNow);
+                function sendWith(httpMethod, done, fail) {
+                    var formData = new FormData($("form")[0]);
+                    $.ajax({
+                        url: API_BASE + "/api/v1/clients/profile",
+                        type: httpMethod,
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        headers: petcareAuthHeader(),
+                        dataType: "json"
+                    }).done(done).fail(fail);
+                }
 
-                var formData = new FormData($("form")[0]);
-                $.ajax({
-                    url: API_BASE + "/api/v1/clients/profile",
-                    type: method,
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    headers: petcareAuthHeader(),
-                    dataType: "json"
-                }).done(function (body) {
+                sendWith(method, function (body) {
                     alert((body && body.message) ? body.message : "Saved.");
                     var emailNow = $("#clientEmail").val();
                     if (emailNow) $("#btn-Search").click();
-                }).fail(function (xhr) {
+                }, function (xhr) {
                     var msg = extractApiError(xhr, "Save failed.");
+                    var isDuplicate =
+                        xhr.status === 409 ||
+                        /duplicate|already exists|registered/i.test(msg || "");
+                    if (method === "POST" && isDuplicate) {
+                        // Existing profile: transparently fallback to update.
+                        sendWith("PUT", function (body) {
+                            alert((body && body.message) ? body.message : "Profile updated successfully.");
+                            var emailNow = $("#clientEmail").val();
+                            if (emailNow) $("#btn-Search").click();
+                        }, function (xhr2) {
+                            alert(extractApiError(xhr2, "Update failed."));
+                        });
+                        return;
+                    }
                     if (xhr.responseJSON && xhr.responseJSON.errors)
                         console.warn("[profile-client] validation", xhr.responseJSON.errors);
                     alert(msg);
