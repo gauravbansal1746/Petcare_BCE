@@ -28,6 +28,10 @@ exports.paymentPage = function (req, resp) {
     resp.sendFile(path.join(__dirname, "../public/payment.html"));
 };
 
+exports.paymentSuccessPage = function (req, resp) {
+    resp.sendFile(path.join(__dirname, "../public/payment-success.html"));
+};
+
 exports.myBookingsPage = function (req, resp) {
     resp.sendFile(path.join(__dirname, "../public/my-bookings.html"));
 };

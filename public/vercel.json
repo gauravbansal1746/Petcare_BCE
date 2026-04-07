@@ -9,6 +9,7 @@
     { "source": "/dash-admin", "destination": "/dash-admin.html" },
     { "source": "/caretkr-finder", "destination": "/caretaker-finder.html" },
     { "source": "/payment", "destination": "/payment.html" },
+    { "source": "/payment-success", "destination": "/payment-success.html" },
     { "source": "/my-bookings", "destination": "/my-bookings.html" },
     { "source": "/caretaker-bookings", "destination": "/caretaker-bookings.html" },
     { "source": "/admin-bookings", "destination": "/admin-bookings.html" },

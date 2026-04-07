@@ -6,6 +6,7 @@
     <title>Payment</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <script src="js/petcare-require-login.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body class="bg-light">
     <div class="container py-5">
@@ -13,7 +14,7 @@
             <div class="card-body">
                 <h4 class="card-title">Complete Payment</h4>
                 <p class="text-muted mb-1">Booking ID: <span id="booking-id">-</span></p>
-                <p class="text-muted">Amount: Rs. 499 (simulated)</p>
+                <p class="text-muted">Amount: Rs. <span id="amount">499</span></p>
                 <div class="d-grid gap-2">
                     <button id="pay-btn" type="button" class="btn btn-success">Pay Now</button>
                     <a class="btn btn-outline-secondary" href="/my-bookings">Go to My Bookings</a>
@@ -28,10 +29,13 @@
             var API_BASE = window.REACT_APP_API_URL || "https://petcarebce-production.up.railway.app";
             var params = new URLSearchParams(window.location.search);
             var bookingId = params.get("bookingId");
+            var amount = Number(params.get("amount") || "499");
             var idEl = document.getElementById("booking-id");
+            var amountEl = document.getElementById("amount");
             var btn = document.getElementById("pay-btn");
             var msg = document.getElementById("msg");
             idEl.textContent = bookingId || "-";
+            amountEl.textContent = amount.toFixed(2);
 
             function show(type, text) {
                 msg.className = "alert mt-3 alert-" + type;
@@ -46,30 +50,94 @@
 
             btn.addEventListener("click", function () {
                 var token = localStorage.getItem("token");
+                var email = localStorage.getItem("email") || "";
                 btn.disabled = true;
-                btn.textContent = "Processing...";
-                fetch(API_BASE + "/api/v1/payment/" + encodeURIComponent(bookingId), {
+                btn.textContent = "Creating order...";
+                Promise.all([
+                    fetch(API_BASE + "/api/v1/payment/public-key", {
+                        method: "GET",
+                        headers: { Authorization: "Bearer " + token }
+                    }).then(function (r) { return r.json(); }),
+                    fetch(API_BASE + "/api/v1/payment/create-order", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: "Bearer " + token
                     },
-                    body: JSON.stringify({ amount: 499, cardNumber: "4242424242424242" })
-                })
-                    .then(function (res) {
-                        return res.json().then(function (body) {
-                            return { ok: res.ok, status: res.status, body: body };
-                        });
+                    body: JSON.stringify({ amount: amount, bookingId: Number(bookingId) })
+                    }).then(function (res) {
+                        return res.json().then(function (body) { return { ok: res.ok, status: res.status, body: body }; });
                     })
-                    .then(function (out) {
+                ])
+                    .then(function (arr) {
+                        var keyResp = arr[0];
+                        var out = arr[1];
+                        if (!keyResp || !keyResp.key) {
+                            show("danger", "Razorpay key missing.");
+                            return;
+                        }
                         if (!out.ok) {
                             show("danger", (out.body && out.body.message) || ("Payment failed (HTTP " + out.status + ")"));
                             return;
                         }
-                        show("success", (out.body && out.body.message) || "Payment successful.");
-                        setTimeout(function () {
-                            window.location.href = "/my-bookings";
-                        }, 1200);
+                        var order = out.body;
+                        var options = {
+                            key: keyResp.key,
+                            amount: order.amount,
+                            currency: order.currency,
+                            name: "PetCare",
+                            description: "Booking Payment",
+                            order_id: order.orderId,
+                            handler: function (response) {
+                                fetch(API_BASE + "/api/v1/payment/verify", {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        Authorization: "Bearer " + token
+                                    },
+                                    body: JSON.stringify({
+                                        razorpay_order_id: response.razorpay_order_id,
+                                        razorpay_payment_id: response.razorpay_payment_id,
+                                        razorpay_signature: response.razorpay_signature,
+                                        bookingId: Number(bookingId)
+                                    })
+                                })
+                                    .then(function (verifyRes) { return verifyRes.json(); })
+                                    .then(function (data) {
+                                        if (data && data.success) {
+                                            localStorage.setItem("lastReceipt", JSON.stringify({
+                                                bookingId: data.bookingId,
+                                                paymentId: data.paymentId,
+                                                orderId: data.orderId,
+                                                userName: email,
+                                                amount: amount,
+                                                paidAt: new Date().toISOString(),
+                                                method: "Online"
+                                            }));
+                                            window.location.href = "/payment-success?bookingId=" + encodeURIComponent(bookingId);
+                                        } else {
+                                            show("danger", "Payment verification failed");
+                                        }
+                                    })
+                                    .catch(function () {
+                                        show("danger", "Payment verification failed");
+                                    });
+                            },
+                            prefill: {
+                                name: email,
+                                email: email
+                            },
+                            theme: {
+                                color: "#3399cc"
+                            },
+                            modal: {
+                                ondismiss: function () {
+                                    show("warning", "Payment cancelled.");
+                                }
+                            }
+                        };
+                        var rzp = new window.Razorpay(options);
+                        rzp.open();
                     })
                     .catch(function () {
                         show("danger", "Network error while processing payment.");

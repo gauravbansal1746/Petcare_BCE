@@ -7,12 +7,34 @@ var validate          = require("../middlewares/validate");
 var schemas           = require("../utils/schemas");
 var ROLES             = require("../config/roles");
 
-router.post(
-    "/:bookingId",
+router.get(
+    "/public-key",
     verifyToken,
     authorizeRoles(ROLES.USER),
-    validate(schemas.processPayment),
-    paymentController.processPayment
+    paymentController.getPublicKey
+);
+
+router.post(
+    "/create-order",
+    verifyToken,
+    authorizeRoles(ROLES.USER),
+    validate(schemas.createPaymentOrder),
+    paymentController.createOrder
+);
+
+router.post(
+    "/verify",
+    verifyToken,
+    authorizeRoles(ROLES.USER),
+    validate(schemas.verifyPayment),
+    paymentController.verifyPayment
+);
+
+router.get(
+    "/receipt/:bookingId",
+    verifyToken,
+    authorizeRoles(ROLES.USER),
+    paymentController.getReceipt
 );
 
 module.exports = router;

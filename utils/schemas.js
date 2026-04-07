@@ -85,17 +85,28 @@ exports.updateBookingStatus = Joi.object({
 
 // ── Payment ───────────────────────────────────────────────────────────────────
 
-exports.processPayment = Joi.object({
-    cardNumber: Joi.string()
-        .pattern(/^\d{16}$/)
-        .default("4242424242424242")
-        .messages({
-            "string.pattern.base": "cardNumber must be exactly 16 digits.",
-            "any.required":        "cardNumber is required."
-        }),
-    amount: Joi.number().positive().default(499).messages({
+exports.createPaymentOrder = Joi.object({
+    bookingId: Joi.number().integer().positive().required().messages({
+        "any.required": "bookingId is required."
+    }),
+    amount: Joi.number().positive().required().messages({
         "number.positive": "amount must be a positive number.",
         "any.required":    "amount is required."
+    })
+});
+
+exports.verifyPayment = Joi.object({
+    bookingId: Joi.number().integer().positive().required().messages({
+        "any.required": "bookingId is required."
+    }),
+    razorpay_order_id: Joi.string().required().messages({
+        "any.required": "razorpay_order_id is required."
+    }),
+    razorpay_payment_id: Joi.string().required().messages({
+        "any.required": "razorpay_payment_id is required."
+    }),
+    razorpay_signature: Joi.string().required().messages({
+        "any.required": "razorpay_signature is required."
     })
 });
 

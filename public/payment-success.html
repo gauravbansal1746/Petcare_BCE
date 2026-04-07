@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Payment Successful</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <script src="js/petcare-require-login.js"></script>
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="card mx-auto shadow-sm" style="max-width: 760px;">
+            <div class="card-body p-4">
+                <h3 class="text-success mb-3">Payment Successful</h3>
+                <p class="text-muted mb-4">Your booking has been confirmed and receipt is generated.</p>
+                <div class="row g-3">
+                    <div class="col-md-6"><strong>Booking ID:</strong> <span id="bookingId">-</span></div>
+                    <div class="col-md-6"><strong>Payment ID:</strong> <span id="paymentId">-</span></div>
+                    <div class="col-md-6"><strong>Order ID:</strong> <span id="orderId">-</span></div>
+                    <div class="col-md-6"><strong>User Name:</strong> <span id="userName">-</span></div>
+                    <div class="col-md-6"><strong>Amount Paid:</strong> Rs. <span id="amount">-</span></div>
+                    <div class="col-md-6"><strong>Date & Time:</strong> <span id="paidAt">-</span></div>
+                    <div class="col-md-6"><strong>Payment Method:</strong> <span id="method">-</span></div>
+                    <div class="col-md-6"><strong>Status:</strong> <span class="text-success">PAID</span></div>
+                </div>
+                <div class="d-flex gap-2 mt-4">
+                    <button type="button" class="btn btn-outline-primary" onclick="window.print()">Download Receipt</button>
+                    <a class="btn btn-success" href="/my-bookings">Go to My Bookings</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function () {
+            var API_BASE = window.REACT_APP_API_URL || "https://petcarebce-production.up.railway.app";
+            var bookingId = new URLSearchParams(window.location.search).get("bookingId");
+            var token = localStorage.getItem("token");
+            var fallback = {};
+            try { fallback = JSON.parse(localStorage.getItem("lastReceipt") || "{}"); } catch (_e) {}
+
+            function set(id, value) {
+                document.getElementById(id).textContent = value || "-";
+            }
+
+            function render(data) {
+                set("bookingId", data.bookingId);
+                set("paymentId", data.paymentId);
+                set("orderId", data.orderId);
+                set("userName", data.userName || localStorage.getItem("email"));
+                set("amount", Number(data.amount || 0).toFixed(2));
+                set("paidAt", data.paidAt ? new Date(data.paidAt).toLocaleString() : "-");
+                set("method", data.method || "Online");
+            }
+
+            if (!bookingId || !token) {
+                render(fallback);
+                return;
+            }
+
+            fetch(API_BASE + "/api/v1/payment/receipt/" + encodeURIComponent(bookingId), {
+                method: "GET",
+                headers: { Authorization: "Bearer " + token }
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (body) {
+                    if (body && body.receipt) {
+                        render({
+                            bookingId: body.receipt.bookingId,
+                            paymentId: body.receipt.paymentId,
+                            orderId: body.receipt.orderId,
+                            userName: localStorage.getItem("email"),
+                            amount: body.receipt.amount,
+                            paidAt: body.receipt.paidAt,
+                            method: body.receipt.method
+                        });
+                    } else {
+                        render(fallback);
+                    }
+                })
+                .catch(function () {
+                    render(fallback);
+                });
+        })();
+    </script>
+</body>
+</html>

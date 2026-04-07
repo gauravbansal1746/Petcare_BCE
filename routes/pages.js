@@ -9,6 +9,7 @@ router.get("/dcaretkr-profile", pageController.profileCaretaker);
 router.get("/dash-admin", pageController.dashAdmin);
 router.get("/caretkr-finder", pageController.caretakerFinder);
 router.get("/payment", pageController.paymentPage);
+router.get("/payment-success", pageController.paymentSuccessPage);
 router.get("/my-bookings", pageController.myBookingsPage);
 router.get("/caretaker-bookings", pageController.caretakerBookingsPage);
 router.get("/admin-bookings", pageController.adminBookingsPage);
