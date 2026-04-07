@@ -3,6 +3,16 @@ var AppError            = require("../utils/AppError");
 var parsePagination     = require("../utils/pagination");
 var resolveClientColumns = require("../utils/clientDbColumns").resolveClientColumns;
 
+function normalizeIdProofPath(value) {
+    var raw = value == null ? "" : String(value).trim();
+    if (!raw) return "/uploads/nopic.png";
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (raw.indexOf("/uploads/") === 0) return raw;
+    if (raw.toLowerCase() === "nopic.png") return "/uploads/nopic.png";
+    if (raw.indexOf("/") !== -1) return raw;
+    return "/uploads/" + raw;
+}
+
 function normalizeCaretakerAdminRow(row) {
     if (!row) return row;
     var phone =
@@ -29,7 +39,8 @@ function normalizeCaretakerAdminRow(row) {
         city:       row.city,
         pin:        row.pin,
         selpets:    row.selpets != null ? row.selpets : row.pets,
-        idproofpic: row.idproofpic != null ? row.idproofpic : (row.pic != null ? row.pic : "nopic.png")
+        idproofpic: normalizeIdProofPath(row.idproofpic != null ? row.idproofpic : (row.pic != null ? row.pic : "nopic.png")),
+        idProof: normalizeIdProofPath(row.idproofpic != null ? row.idproofpic : (row.pic != null ? row.pic : "nopic.png"))
     };
 }
 
@@ -94,7 +105,14 @@ exports.fetchAllClients = function (req, res, next) {
 
         dbRef.query(listSql, [pg.limit, pg.offset], function (err, result) {
             if (err) { error = err; }
-            else     { rows = result; }
+            else     {
+                rows = (result || []).map(function (row) {
+                    var mapped = Object.assign({}, row);
+                    mapped.idproofpic = normalizeIdProofPath(row.idproofpic);
+                    mapped.idProof = mapped.idproofpic;
+                    return mapped;
+                });
+            }
             if (++done === 2) finish();
         });
     });

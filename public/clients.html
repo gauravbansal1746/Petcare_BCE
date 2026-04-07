@@ -27,6 +27,13 @@
         angular.module("myModule").controller("myController", function ($scope, $http) {
             var API_BASE = window.REACT_APP_API_URL || "https://petcarebce-production.up.railway.app";
             $scope.jsonUsersAry = [];
+            $scope.getIdProofSrc = function (item) {
+                var idProof = item && (item.idProof || item.idproofpic);
+                console.log("ID Proof Path:", idProof);
+                if (!idProof || !String(idProof).trim()) return "/pics/placeholder-pic.jpg";
+                if (/^https?:\/\//i.test(idProof)) return idProof;
+                return API_BASE + idProof;
+            };
 
             $scope.fetchAndShowClients = function () {
                 $http.get(API_BASE + "/api/v1/admin/clients?page=1&limit=100").then(fxOk, fxNotOk);
@@ -101,7 +108,16 @@
                           <td>{{obj.state}}</td>
                           <td>{{obj.pin}}</td>
                           <td>{{obj.profilepic}}</td>
-                          <td>{{obj.idproofpic}}</td>
+                          <td>
+                            <img
+                              ng-src="{{getIdProofSrc(obj)}}"
+                              alt="ID Proof"
+                              width="150"
+                              height="100"
+                              style="border-radius:8px;border:1px solid #ccc;object-fit:cover;"
+                              onerror="this.src='/pics/placeholder-pic.jpg';"
+                            >
+                          </td>
                           <td>{{obj.pets}}</td>
                           <td> <button type="button"  class="btn btn-outline-danger" id="block-btn" ng-click="deleteClient(obj.email);">Delete</button></td>
                         </tr>

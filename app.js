@@ -2,6 +2,7 @@ require("dotenv").config();
 var express    = require("express");
 var fileUpload = require("express-fileupload");
 var security   = require("./config/security");
+var path       = require("path");
 
 var app = express();
 
@@ -35,6 +36,8 @@ app.use(fileUpload({
 
 // 6. Static files — served after security headers are set
 app.use(express.static("public"));
+app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join("public", "uploads")));
 
 // 7. Request logger
 app.use(require("./middlewares/requestLogger"));

@@ -4,7 +4,18 @@ var resolveClientColumns   = require("../utils/clientDbColumns").resolveClientCo
 var cloudinaryUpload       = require("../utils/cloudinary").uploadFile;
 var cloudinaryEnabled      = require("../utils/cloudinary").isEnabled;
 var validators             = require("../utils/validators");
+var fs                     = require("fs");
 var canWriteLocalUploads   = process.env.NODE_ENV !== "production";
+var localUploadDir         = process.cwd() + "/uploads";
+
+function normalizeUploadPath(value) {
+    var raw = value == null ? "" : String(value).trim();
+    if (!raw || raw.toLowerCase() === "nopic.png") return "/uploads/nopic.png";
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (raw.indexOf("/uploads/") === 0) return raw;
+    if (raw.indexOf("/") !== -1) return raw;
+    return "/uploads/" + raw;
+}
 
 function ensureClientPayload(req, next) {
     var b = req.body || {};
@@ -20,8 +31,8 @@ function ensureClientPayload(req, next) {
 exports.createProfile = function (req, res, next) {
     var validationError = ensureClientPayload(req, next);
     if (validationError) return;
-    var pic1 = "nopic.png";
-    var pic2 = "nopic.png";
+    var pic1 = "/uploads/nopic.png";
+    var pic2 = "/uploads/nopic.png";
     var pending = 0;
     var aborted = false;
 
@@ -70,7 +81,7 @@ exports.createProfile = function (req, res, next) {
                     aborted = true;
                     return next(err);
                 }
-                setOut(out && out.url ? out.url : "nopic.png");
+                setOut(out && out.url ? out.url : "/uploads/nopic.png");
                 pending--;
                 finishIfDone();
             });
@@ -80,20 +91,21 @@ exports.createProfile = function (req, res, next) {
         if (!canWriteLocalUploads) {
             // On production hosts (e.g. Railway), local filesystem may be ephemeral/read-only.
             // If Cloudinary is not configured, skip file persistence but continue profile save.
-            setOut("nopic.png");
+            setOut("/uploads/nopic.png");
             pending--;
             finishIfDone();
             return;
         }
 
         var name = f.name;
-        f.mv(process.cwd() + "/public/uploads/" + name, function (err) {
+        fs.mkdirSync(localUploadDir, { recursive: true });
+        f.mv(localUploadDir + "/" + name, function (err) {
             if (aborted) return;
             if (err) {
                 aborted = true;
                 return next(err);
             }
-            setOut(name);
+            setOut("/uploads/" + name);
             pending--;
             finishIfDone();
         });
@@ -109,8 +121,8 @@ exports.createProfile = function (req, res, next) {
 exports.updateProfile = function (req, res, next) {
     var validationError = ensureClientPayload(req, next);
     if (validationError) return;
-    var ppic = req.body["hdn-1"] || "nopic.png";
-    var idpic = req.body["hdn-2"] || "nopic.png";
+    var ppic = normalizeUploadPath(req.body["hdn-1"]);
+    var idpic = normalizeUploadPath(req.body["hdn-2"]);
     var pending = 0;
     var aborted = false;
 
@@ -159,7 +171,7 @@ exports.updateProfile = function (req, res, next) {
                     aborted = true;
                     return next(err);
                 }
-                setOut(out && out.url ? out.url : "nopic.png");
+                setOut(out && out.url ? out.url : "/uploads/nopic.png");
                 pending--;
                 doUpdate();
             });
@@ -167,20 +179,21 @@ exports.updateProfile = function (req, res, next) {
         }
 
         if (!canWriteLocalUploads) {
-            setOut("nopic.png");
+            setOut("/uploads/nopic.png");
             pending--;
             doUpdate();
             return;
         }
 
         var name = f.name;
-        f.mv(process.cwd() + "/public/uploads/" + name, function (err) {
+        fs.mkdirSync(localUploadDir, { recursive: true });
+        f.mv(localUploadDir + "/" + name, function (err) {
             if (aborted) return;
             if (err) {
                 aborted = true;
                 return next(err);
             }
-            setOut(name);
+            setOut("/uploads/" + name);
             pending--;
             doUpdate();
         });
@@ -206,14 +219,16 @@ exports.fetchProfile = function (req, res, next) {
             if (err) return next(err);
             var normalized = (rows || []).map(function (r) {
                 var mobileVal = r && r[ccols.phone] != null ? r[ccols.phone] : (r.mobile || r.contact || "");
-                var profilePicVal =
+                var profilePicVal = normalizeUploadPath(
                     r && r[ccols.profilePic] != null && String(r[ccols.profilePic]).trim() !== ""
                         ? r[ccols.profilePic]
-                        : "nopic.png";
-                var idProofPicVal =
+                        : "nopic.png"
+                );
+                var idProofPicVal = normalizeUploadPath(
                     r && r[ccols.idProofPic] != null && String(r[ccols.idProofPic]).trim() !== ""
                         ? r[ccols.idProofPic]
-                        : "nopic.png";
+                        : "nopic.png"
+                );
 
                 return {
                     email:      r.email,

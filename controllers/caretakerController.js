@@ -4,7 +4,18 @@ var resolveCaretakerColumns = require("../utils/caretakerDbColumns").resolveCare
 var cloudinaryUpload        = require("../utils/cloudinary").uploadFile;
 var cloudinaryEnabled       = require("../utils/cloudinary").isEnabled;
 var validators              = require("../utils/validators");
+var fs                      = require("fs");
 var canWriteLocalUploads    = process.env.NODE_ENV !== "production";
+var localUploadDir          = process.cwd() + "/uploads";
+
+function normalizeUploadPath(value) {
+    var raw = value == null ? "" : String(value).trim();
+    if (!raw || raw.toLowerCase() === "nopic.png") return "/uploads/nopic.png";
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (raw.indexOf("/uploads/") === 0) return raw;
+    if (raw.indexOf("/") !== -1) return raw;
+    return "/uploads/" + raw;
+}
 
 function ensureCaretakerPayload(req, next) {
     var b = req.body || {};
@@ -19,7 +30,7 @@ function ensureCaretakerPayload(req, next) {
 
 exports.createProfile = function (req, res, next) {
     if (ensureCaretakerPayload(req, next)) return;
-    var pic = "nopic.png";
+    var pic = "/uploads/nopic.png";
     var aborted = false;
 
     if (process.env.NODE_ENV !== "production") {
@@ -70,20 +81,21 @@ exports.createProfile = function (req, res, next) {
                     aborted = true;
                     return next(err);
                 }
-                pic = out && out.url ? out.url : "nopic.png";
+                pic = out && out.url ? out.url : "/uploads/nopic.png";
                 doInsert();
             });
             return;
         }
 
         if (!canWriteLocalUploads) {
-            pic = "nopic.png";
+            pic = "/uploads/nopic.png";
             doInsert();
             return;
         }
 
-        pic = f.name;
-        f.mv(process.cwd() + "/public/uploads/" + pic, function (err) {
+        pic = "/uploads/" + f.name;
+        fs.mkdirSync(localUploadDir, { recursive: true });
+        f.mv(localUploadDir + "/" + f.name, function (err) {
             if (aborted) return;
             if (err) {
                 aborted = true;
@@ -98,7 +110,7 @@ exports.createProfile = function (req, res, next) {
 
 exports.updateProfile = function (req, res, next) {
     if (ensureCaretakerPayload(req, next)) return;
-    var picName = req.body.hdn || "nopic.png";
+    var picName = normalizeUploadPath(req.body.hdn);
 
     if (process.env.NODE_ENV !== "production") {
         console.log("[profile-caretaker] updateProfile files:", Object.keys(req.files || {}));
@@ -141,19 +153,20 @@ exports.updateProfile = function (req, res, next) {
         if (cloudinaryEnabled()) {
             cloudinaryUpload(f, { subfolder: "caretaker/idproof" }, function (err, out) {
                 if (err) return next(err);
-                picName = out && out.url ? out.url : "nopic.png";
+                picName = out && out.url ? out.url : "/uploads/nopic.png";
                 doUpdate();
             });
             return;
         }
         if (!canWriteLocalUploads) {
-            picName = "nopic.png";
+            picName = "/uploads/nopic.png";
             doUpdate();
             return;
         }
 
-        picName = f.name;
-        f.mv(process.cwd() + "/public/uploads/" + picName, function (err) {
+        picName = "/uploads/" + f.name;
+        fs.mkdirSync(localUploadDir, { recursive: true });
+        f.mv(localUploadDir + "/" + f.name, function (err) {
             if (err) return next(err);
             doUpdate();
         });
@@ -190,10 +203,11 @@ exports.fetchProfile = function (req, res, next) {
                     r && r[cols.pet] != null
                         ? r[cols.pet]
                         : (r.selpets || r.pets || r.Pets || "");
-                var idProofVal =
+                var idProofVal = normalizeUploadPath(
                     r && r[cols.idProofPic] != null && String(r[cols.idProofPic]).trim() !== ""
                         ? r[cols.idProofPic]
-                        : (r.idproofpic || r.pic || r.Pic || "nopic.png");
+                        : (r.idproofpic || r.pic || r.Pic || "nopic.png")
+                );
 
                 return {
                     email:      r.email,
@@ -239,10 +253,11 @@ function normalizeFinderRow(row, cols) {
         cols && cols.pet && row[cols.pet] != null
             ? row[cols.pet]
             : (row.selpets || row.pets || "");
-    var idProofVal =
+    var idProofVal = normalizeUploadPath(
         cols && cols.idProofPic && row[cols.idProofPic] != null
             ? row[cols.idProofPic]
-            : (row.idproofpic || row.pic || row.Pic || "nopic.png");
+            : (row.idproofpic || row.pic || row.Pic || "nopic.png")
+    );
 
     return {
         email:      row.email,
