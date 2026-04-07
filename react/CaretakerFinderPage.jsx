@@ -7,6 +7,8 @@
 import { useState, useMemo } from "react";
 import { INDIA_STATE_ORDER, getCitiesForState } from "./indiaStateCities.js";
 
+const API = process.env.REACT_APP_API_URL || "https://petcarebce-production.up.railway.app";
+
 export default function CaretakerFinderPage() {
   const [selectedState, setSelectedState] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
@@ -57,7 +59,7 @@ export default function CaretakerFinderPage() {
     setShowNoResults(false);
     setResults([]);
 
-    const url = `/api/v1/caretakers?cityforserver=${encodeURIComponent(city)}&petforserver=${encodeURIComponent(pet)}`;
+    const url = `${API}/api/v1/caretakers?cityforserver=${encodeURIComponent(city)}&petforserver=${encodeURIComponent(pet)}`;
     console.log("[caretaker-finder] Fetch caretakers request:", { state: selectedState, city, pet, url });
 
     try {
