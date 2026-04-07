@@ -50,6 +50,8 @@ app.use("/api/v1/auth",       security.authLimiter,   require("./routes/auth"));
 // All other API routes — standard rate limit
 app.use("/api/v1/clients",    security.apiLimiter,    require("./routes/client"));
 app.use("/api/v1/caretakers", security.apiLimiter,    require("./routes/caretaker"));
+app.use("/api/client",        security.apiLimiter,    require("./routes/client"));
+app.use("/api/caretaker",     security.apiLimiter,    require("./routes/caretaker"));
 app.use("/api/v1/admin",      security.apiLimiter,    require("./routes/admin"));
 app.use("/api/v1/bookings",   security.apiLimiter,    require("./routes/booking"));
 app.use("/api/v1/payments",   security.apiLimiter,    require("./routes/payment"));

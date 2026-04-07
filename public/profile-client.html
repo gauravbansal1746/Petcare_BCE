@@ -190,25 +190,34 @@
 
                 function sendWith(httpMethod, onSuccess, onError) {
                     console.log("REQUEST DATA:", data);
-                    var formData = new FormData($("form")[0]);
-                    $.ajax({
-                        url: API_BASE + "/api/v1/clients/profile",
-                        type: httpMethod,
-                        data: formData,
-                        processData: false,
-                        contentType: false,
+                    fetch(API_BASE + "/api/v1/clients/profile", {
+                        method: httpMethod,
                         headers: {
+                            "Content-Type": "application/json",
                             Authorization: "Bearer " + token
                         },
-                        dataType: "json"
-                    }).done(function (body) {
-                        console.log("RESPONSE:", body);
-                        onSuccess(body);
-                    }).fail(function (xhr) {
-                        var payload = xhr.responseJSON || { message: extractApiError(xhr, "Request failed.") };
-                        console.error("ERROR:", payload || xhr.statusText);
-                        onError({ payload: payload, status: xhr.status, message: payload.message });
-                    });
+                        body: JSON.stringify(data)
+                    })
+                        .then(function (response) {
+                            return response.json().then(function (body) {
+                                return { response: response, body: body };
+                            });
+                        })
+                        .then(function (out) {
+                            console.log("RESPONSE:", out.body);
+                            if (!out.response.ok) {
+                                var error = new Error((out.body && out.body.message) || "Request failed");
+                                error.response = { data: out.body };
+                                error.status = out.response.status;
+                                throw error;
+                            }
+                            onSuccess(out.body);
+                        })
+                        .catch(function (error) {
+                            console.error("ERROR:", (error.response && error.response.data) || error.message);
+                            var payload = (error.response && error.response.data) || { message: error.message };
+                            onError({ payload: payload, status: error.status || 500, message: payload.message });
+                        });
                 }
 
                 sendWith(method, function (body) {
