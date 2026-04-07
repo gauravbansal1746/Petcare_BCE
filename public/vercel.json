@@ -1,0 +1,23 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/dclient", "destination": "/dash-client.html" },
+    { "source": "/dcaretaker", "destination": "/dash-caretaker.html" },
+    { "source": "/dcaretkr-profile", "destination": "/profile-caretaker.html" },
+    { "source": "/dash-admin", "destination": "/dash-admin.html" },
+    { "source": "/caretkr-finder", "destination": "/caretaker-finder.html" },
+    { "source": "/payment", "destination": "/payment.html" },
+    { "source": "/my-bookings", "destination": "/my-bookings.html" },
+    { "source": "/caretaker-bookings", "destination": "/caretaker-bookings.html" },
+    { "source": "/admin-bookings", "destination": "/admin-bookings.html" },
+    { "source": "/user-manager", "destination": "/user-manager.html" },
+    { "source": "/clients", "destination": "/clients.html" },
+    { "source": "/caretakers", "destination": "/caretakers.html" },
+    { "source": "/profile-client", "destination": "/profile-client.html" },
+    { "source": "/profile-caretaker", "destination": "/profile-caretaker.html" },
+    { "source": "/settings-client", "destination": "/settings-client.html" },
+    { "source": "/settings-caretaker", "destination": "/settings-caretaker.html" }
+  ]
+}
