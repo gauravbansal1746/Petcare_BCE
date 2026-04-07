@@ -4,6 +4,7 @@ var resolveClientColumns   = require("../utils/clientDbColumns").resolveClientCo
 var cloudinaryUpload       = require("../utils/cloudinary").uploadFile;
 var cloudinaryEnabled      = require("../utils/cloudinary").isEnabled;
 var validators             = require("../utils/validators");
+var canWriteLocalUploads   = process.env.NODE_ENV !== "production";
 
 function ensureClientPayload(req, next) {
     var b = req.body || {};
@@ -60,6 +61,15 @@ exports.createProfile = function (req, res, next) {
                 pending--;
                 finishIfDone();
             });
+            return;
+        }
+
+        if (!canWriteLocalUploads) {
+            // On production hosts (e.g. Railway), local filesystem may be ephemeral/read-only.
+            // If Cloudinary is not configured, skip file persistence but continue profile save.
+            setOut("nopic.png");
+            pending--;
+            finishIfDone();
             return;
         }
 
@@ -140,6 +150,13 @@ exports.updateProfile = function (req, res, next) {
                 pending--;
                 doUpdate();
             });
+            return;
+        }
+
+        if (!canWriteLocalUploads) {
+            setOut("nopic.png");
+            pending--;
+            doUpdate();
             return;
         }
 

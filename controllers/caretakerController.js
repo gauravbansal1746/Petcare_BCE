@@ -4,6 +4,7 @@ var resolveCaretakerColumns = require("../utils/caretakerDbColumns").resolveCare
 var cloudinaryUpload        = require("../utils/cloudinary").uploadFile;
 var cloudinaryEnabled       = require("../utils/cloudinary").isEnabled;
 var validators              = require("../utils/validators");
+var canWriteLocalUploads    = process.env.NODE_ENV !== "production";
 
 function ensureCaretakerPayload(req, next) {
     var b = req.body || {};
@@ -52,6 +53,12 @@ exports.createProfile = function (req, res, next) {
                 pic = out && out.url ? out.url : "nopic.png";
                 doInsert();
             });
+            return;
+        }
+
+        if (!canWriteLocalUploads) {
+            pic = "nopic.png";
+            doInsert();
             return;
         }
 
@@ -119,6 +126,12 @@ exports.updateProfile = function (req, res, next) {
             });
             return;
         }
+        if (!canWriteLocalUploads) {
+            picName = "nopic.png";
+            doUpdate();
+            return;
+        }
+
         picName = f.name;
         f.mv(process.cwd() + "/public/uploads/" + picName, function (err) {
             if (err) return next(err);
