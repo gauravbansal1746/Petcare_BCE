@@ -35,6 +35,16 @@
             if (body && Array.isArray(body.errors) && body.errors.length) {
                 return body.errors.map(function (e) { return e.message || e.field; }).join("\n");
             }
+            if (body && body.message) return body.message;
+            if (xhr && xhr.responseText) {
+                try {
+                    var parsed = JSON.parse(xhr.responseText);
+                    if (parsed && parsed.message) return parsed.message;
+                } catch (e) {}
+            }
+            if (xhr && xhr.status === 0) {
+                return "Network/CORS error: request blocked or server unreachable.";
+            }
             return (body && body.message) ? body.message : fallback;
         }
 
