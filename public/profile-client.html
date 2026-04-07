@@ -135,41 +135,77 @@
 
                 var emailNow = (localStorage.getItem("email") || $("#clientEmail").val() || "").trim();
                 if (emailNow) $("#clientEmail").val(emailNow);
-                function sendWith(httpMethod, done, fail) {
-                    var formData = new FormData($("form")[0]);
-                    $.ajax({
-                        url: API_BASE + "/api/v1/clients/profile",
-                        type: httpMethod,
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        headers: petcareAuthHeader(),
-                        dataType: "json"
-                    }).done(done).fail(fail);
+                var token = localStorage.getItem("token");
+                if (!token) {
+                    console.error("ERROR:", "Missing auth token in localStorage.");
+                    alert("Missing auth token. Please login again.");
+                    return;
+                }
+
+                var data = {
+                    clientEmail: $("#clientEmail").val(),
+                    clientName: $("#clientName").val(),
+                    clientContact: $("#clientContact").val(),
+                    clientAddress: $("#clientAddress").val(),
+                    clientCity: $("#clientCity").val(),
+                    clientState: $("#clientState").val(),
+                    clientPin: $("#clientPin").val(),
+                    clientPets: $("#clientPets").val(),
+                    "hdn-1": $("#hdn-1").val(),
+                    "hdn-2": $("#hdn-2").val()
+                };
+
+                function sendWith(httpMethod, onSuccess, onError) {
+                    console.log("REQUEST DATA:", data);
+                    fetch(API_BASE + "/api/v1/clients/profile", {
+                        method: httpMethod,
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: "Bearer " + token
+                        },
+                        body: JSON.stringify(data)
+                    })
+                        .then(function (response) {
+                            return response.json().then(function (body) {
+                                return { response: response, body: body };
+                            });
+                        })
+                        .then(function (out) {
+                            console.log("RESPONSE:", out.body);
+                            if (!out.response.ok) {
+                                var err = new Error((out.body && out.body.message) || "Request failed.");
+                                err.payload = out.body;
+                                err.status = out.response.status;
+                                throw err;
+                            }
+                            onSuccess(out.body);
+                        })
+                        .catch(function (error) {
+                            console.error("ERROR:", (error && error.payload) || error.message);
+                            onError(error);
+                        });
                 }
 
                 sendWith(method, function (body) {
                     alert((body && body.message) ? body.message : "Saved.");
-                    var emailNow = $("#clientEmail").val();
-                    if (emailNow) $("#btn-Search").click();
-                }, function (xhr) {
-                    var msg = extractApiError(xhr, "Save failed.");
+                    var currentEmail = $("#clientEmail").val();
+                    if (currentEmail) $("#btn-Search").click();
+                }, function (error) {
+                    var msg = (error && error.payload && error.payload.message) || error.message || "Save failed.";
                     var isDuplicate =
-                        xhr.status === 409 ||
+                        error.status === 409 ||
                         /duplicate|already exists|registered/i.test(msg || "");
                     if (method === "POST" && isDuplicate) {
-                        // Existing profile: transparently fallback to update.
                         sendWith("PUT", function (body) {
                             alert((body && body.message) ? body.message : "Profile updated successfully.");
-                            var emailNow = $("#clientEmail").val();
-                            if (emailNow) $("#btn-Search").click();
-                        }, function (xhr2) {
-                            alert(extractApiError(xhr2, "Update failed."));
+                            var currentEmail = $("#clientEmail").val();
+                            if (currentEmail) $("#btn-Search").click();
+                        }, function (error2) {
+                            var msg2 = (error2 && error2.payload && error2.payload.message) || error2.message || "Update failed.";
+                            alert(msg2);
                         });
                         return;
                     }
-                    if (xhr.responseJSON && xhr.responseJSON.errors)
-                        console.warn("[profile-client] validation", xhr.responseJSON.errors);
                     alert(msg);
                 });
             }
