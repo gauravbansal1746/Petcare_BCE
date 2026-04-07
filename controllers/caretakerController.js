@@ -34,10 +34,30 @@ exports.createProfile = function (req, res, next) {
             req.body.city.trim(), req.body.caretkrPin, req.body.selPets, pic
         ];
 
-        dbRef.query("insert into caretakers values(?,?,?,?,?,?,?,?,?,?)", dataAry, function (err) {
-            if (aborted) return;
-            if (err) return next(err);
-            res.status(201).json({ status: "success", message: "Caretaker profile created successfully." });
+        resolveCaretakerColumns(function (colErr, cols) {
+            if (colErr) return next(colErr);
+            var nameCol       = "`" + cols.name + "`";
+            var phoneCol      = "`" + cols.phone + "`";
+            var addressCol    = "`" + cols.address + "`";
+            var petCol        = "`" + cols.pet + "`";
+            var idProofPicCol = "`" + cols.idProofPic + "`";
+            var sql =
+                "insert into caretakers (email, " +
+                nameCol +
+                ", " +
+                phoneCol +
+                ", " +
+                addressCol +
+                ", website, state, city, pin, " +
+                petCol +
+                ", " +
+                idProofPicCol +
+                ") values (?,?,?,?,?,?,?,?,?,?)";
+            dbRef.query(sql, dataAry, function (err) {
+                if (aborted) return;
+                if (err) return next(err);
+                res.status(201).json({ status: "success", message: "Caretaker profile created successfully." });
+            });
         });
     }
 

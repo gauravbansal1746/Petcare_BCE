@@ -39,9 +39,22 @@ exports.createProfile = function (req, res, next) {
             req.body.clientPin, pic1, pic2, req.body.clientPets
         ];
 
-        dbRef.query("insert into clients values(?,?,?,?,?,?,?,?,?,?)", dataAry, function (err) {
-            if (err) return next(err);
-            res.status(201).json({ status: "success", message: "Client profile created successfully." });
+        resolveClientColumns(function (colErr, ccols) {
+            if (colErr) return next(colErr);
+            var sql =
+                "insert into clients (email, name, " +
+                ccols.phoneSql +
+                ", address, city, state, pin, " +
+                ccols.profilePicSql +
+                ", " +
+                ccols.idProofPicSql +
+                ", " +
+                ccols.petsSql +
+                ") values (?,?,?,?,?,?,?,?,?,?)";
+            dbRef.query(sql, dataAry, function (err) {
+                if (err) return next(err);
+                res.status(201).json({ status: "success", message: "Client profile created successfully." });
+            });
         });
     }
 
